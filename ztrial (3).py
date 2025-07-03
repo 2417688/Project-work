@@ -8,7 +8,7 @@ Original file is located at
 """
 
 
-"""1: Import Libraries"""
+#"""1: Import Libraries"""
 
 # Core libraries
 import re
@@ -19,7 +19,7 @@ import pandas as pd
 # Streamlit for UI
 import streamlit as st
 
-"""2: Simulate Fine-Tuned BERT Model Output"""
+#"""2: Simulate Fine-Tuned BERT Model Output"""
 
 # Simulated fine-tuned BERT model output
 def simulate_bert_scores(message):
@@ -28,7 +28,7 @@ def simulate_bert_scores(message):
   importance_score = random.uniform(0.3, 1.0)
   return urgency_score, importance_score
 
-"""3: Rule-Based Urgency Scoring (Deadline Proximity)"""
+#"""3: Rule-Based Urgency Scoring (Deadline Proximity)"""
 
 # Rule-based urgency score based on deadline proximity
 def rule_based_urgency(message, timestamp):
@@ -51,7 +51,7 @@ def rule_based_urgency(message, timestamp):
             return 0.0
     return 0.0
 
-"""4: Rule-Based Flags for Urgency Keywords"""
+#"""4: Rule-Based Flags for Urgency Keywords"""
 
 # Rule-based flags for urgency keywords
 def rule_based_flags(message):
@@ -62,7 +62,7 @@ def rule_based_flags(message):
             score += 0.1
     return min(score, 0.3)
 
-"""5: Combine Rule-Based and BERT Scores"""
+#"""5: Combine Rule-Based and BERT Scores"""
 
 # Combine rule-based and BERT scores with clear separation
 def combine_scores(urgency_rule_score, urgency_flag_score, urgency_bert_score, importance_bert_score,
@@ -77,7 +77,7 @@ def combine_scores(urgency_rule_score, urgency_flag_score, urgency_bert_score, i
 
     return combined_urgency, combined_importance
 
-"""6: Analyze Message, Generate Response, and Determine Escalation"""
+#"""6: Analyze Message, Generate Response, and Determine Escalation"""
 
 def analyze_message(message, timestamp):
     urgency_rule_score = rule_based_urgency(message, timestamp)
@@ -111,7 +111,7 @@ def generate_response(message, urgency, importance, escalate):
     else:
         return f"✅ This message does not require immediate attention. You can monitor it for now."
 
-"""7: Initialize Streamlit App and Session State"""
+#"""7: Initialize Streamlit App and Session State"""
 
 '''# Streamlit app setup
 st.set_page_config(page_title="Urgency & Importance Analyzer", layout="wide")
@@ -125,7 +125,7 @@ if "message_history" not in st.session_state:
     st.session_state.message_history = []
 '''
 
-"""8: Create Chatbot Tab"""
+#"""8: Create Chatbot Tab"""
 
 '''# Chatbot tab
 tab1, tab2 = st.tabs(["💬 Chatbot", "📊 Dashboard"])
@@ -201,7 +201,7 @@ if analyze_button and message_input:
             "status": "Pending"  # Default status
         })
 
-"""9: Create Dashboard Tab"""
+#"""9: Create Dashboard Tab"""
 
 with tab2:
     st.header("Escalated Tasks Dashboard")
