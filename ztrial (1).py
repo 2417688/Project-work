@@ -57,7 +57,7 @@ def rule_based_flags(message):
     keywords = ['urgent', 'asap', 'immediately', 'critical', 'important']
     score = 0.0
     for word in keywords:
-        if re.search(rf'\\b{word}\\b', message, re.IGNORECASE):
+        if re.search(rf'\b{word}\b', message, re.IGNORECASE):  # Fixed regex
             score += 0.1
     return min(score, 0.3)
 
@@ -78,16 +78,11 @@ def combine_scores(urgency_rule_score, urgency_flag_score, urgency_bert_score, i
 
 #"""6: Analyze Message, Generate Response, and Determine Escalation"""
 
-# Analyze message and determine escalation
 def analyze_message(message, timestamp):
-    # Rule-based components
     urgency_rule_score = rule_based_urgency(message, timestamp)
     urgency_flag_score = rule_based_flags(message)
-
-    # BERT-based components (simulated for now)
     urgency_bert_score, importance_bert_score = simulate_bert_scores(message)
 
-    # Combine scores
     final_urgency, final_importance = combine_scores(
         urgency_rule_score,
         urgency_flag_score,
@@ -95,26 +90,27 @@ def analyze_message(message, timestamp):
         importance_bert_score
     )
 
-    # Escalation logic
     escalate = final_urgency > 0.7 and final_importance > 0.7
-    if escalate:
-        response = "🚨 This message is urgent and important. It should be escalated immediately."
-    elif final_urgency > 0.5 or final_importance > 0.5:
-        response = "⚠️ This message has moderate urgency or importance. Consider reviewing it soon."
-    else:
-        response = "✅ This message does not require immediate attention."
+    response = generate_response(message, final_urgency, final_importance, escalate)
 
     return {
-        "urgency_rule_score": round(urgency_rule_score, 2),
-        "urgency_flag_score": round(urgency_flag_score, 2),
-        "urgency_bert_score": round(urgency_bert_score, 2),
-        "importance_bert_score": round(importance_bert_score, 2),
-        "final_urgency": round(final_urgency, 2),
-        "final_importance": round(final_importance, 2),
+        "timestamp": timestamp,
+        "message": message,
+        "urgency": round(final_urgency, 2),
+        "importance": round(final_importance, 2),
         "response": response,
         "escalate": escalate
     }
 
+    def generate_response(message, urgency, importance, escalate):
+    if escalate:
+        return f"🚨 This message appears to be both urgent and important. Recommended action: escalate to your project lead or take immediate steps to address the issue."
+    elif urgency > 0.5 or importance > 0.5:
+        return f"⚠️ This message has moderate urgency or importance. You may want to review it soon and follow up if needed."
+    else:
+        return f"✅ This message does not require immediate attention. You can monitor it for now."
+
+'''
 #"""7: Initialize Streamlit App and Session State"""
 
 # Streamlit app setup
@@ -176,6 +172,33 @@ with tab1:
                 "importance": result["final_importance"],
                 "response": result["response"]
             })
+'''
+
+# On button click
+if analyze_button and message_input:
+    timestamp = datetime.datetime.combine(timestamp_input, datetime.datetime.min.time())
+    result = analyze_message(message_input, timestamp)
+
+    # Display only the response
+    st.markdown(f"**Response:** {result['response']}")
+
+    # Store in history
+    st.session_state.message_history.append(result)
+
+    # Store in dashboard if escalated
+    if result["escalate"]:
+        st.success("✅ Task added to dashboard.")
+        st.session_state.escalated_tasks.append({
+            "timestamp": result["timestamp"],
+            "message": result["message"],
+            "urgency": result["urgency"],
+            "importance": result["importance"],
+            "response": result["response"],
+            "project_name": "",  # Placeholder
+            "action": "",        # Placeholder
+            "deadline": "",      # Placeholder
+            "status": "Pending"  # Default status
+        })
 
 #"""9: Create Dashboard Tab"""
 
@@ -184,7 +207,17 @@ with tab2:
 
     if st.session_state.escalated_tasks:
         df = pd.DataFrame(st.session_state.escalated_tasks)
+
+        # Add editable columns
+        editable_cols = ["project_name", "action", "deadline", "status"]
+        df = st.data_editor(df, num_rows="dynamic", use_container_width=True, key="dashboard_editor")
+
+        # Optional: sort by deadline or status
+        sort_by = st.selectbox("Sort by", ["timestamp", "deadline", "status"])
+        df = df.sort_values(by=sort_by)
+
         st.dataframe(df)
     else:
         st.info("No escalated tasks yet.")
+
 
