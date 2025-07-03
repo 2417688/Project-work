@@ -111,69 +111,6 @@ def generate_response(message, urgency, importance, escalate):
     else:
         return f"✅ This message does not require immediate attention. You can monitor it for now."
 
-#"""7: Initialize Streamlit App and Session State"""
-
-'''# Streamlit app setup
-st.set_page_config(page_title="Urgency & Importance Analyzer", layout="wide")
-st.title("📬 Message Analyzer")
-
-# Initialize session state for escalated tasks and message history
-if "escalated_tasks" not in st.session_state:
-    st.session_state.escalated_tasks = []
-
-if "message_history" not in st.session_state:
-    st.session_state.message_history = []
-'''
-
-#"""8: Create Chatbot Tab"""
-
-'''# Chatbot tab
-tab1, tab2 = st.tabs(["💬 Chatbot", "📊 Dashboard"])
-
-with tab1:
-    st.header("Analyze a Message")
-
-    # Input fields
-    message_input = st.text_area("Enter your message or email text:")
-    timestamp_input = st.date_input("Message timestamp", datetime.date.today())
-    analyze_button = st.button("Analyze")
-
-    # On button click
-    if analyze_button and message_input:
-        timestamp = datetime.datetime.combine(timestamp_input, datetime.datetime.min.time())
-
-        # Analyze the message
-        result = analyze_message(message_input, timestamp)
-
-        # Display results
-        st.markdown(f"**Urgency Rule Score:** {result['urgency_rule_score']}")
-        st.markdown(f"**Urgency Flag Score:** {result['urgency_flag_score']}")
-        st.markdown(f"**Urgency BERT Score:** {result['urgency_bert_score']}")
-        st.markdown(f"**Importance BERT Score:** {result['importance_bert_score']}")
-        st.markdown(f"**Final Urgency Score:** {result['final_urgency']}")
-        st.markdown(f"**Final Importance Score:** {result['final_importance']}")
-        st.markdown(f"**Response:** {result['response']}")
-
-        # Store in history
-        st.session_state.message_history.append({
-            "timestamp": timestamp,
-            "message": message_input,
-            "urgency": result["final_urgency"],
-            "importance": result["final_importance"],
-            "response": result["response"]
-        })
-
-        # Store in dashboard if escalated
-        if result["escalate"]:
-            st.success("✅ Task added to dashboard.")
-            st.session_state.escalated_tasks.append({
-                "timestamp": timestamp,
-                "message": message_input,
-                "urgency": result["final_urgency"],
-                "importance": result["final_importance"],
-                "response": result["response"]
-            })
-'''
 
 # On button click
 if analyze_button and message_input:
