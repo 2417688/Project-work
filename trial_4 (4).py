@@ -284,7 +284,7 @@ with tab2:
         df["Message"] = df["message"]
         df["Select"] = False  # Checkbox for deletion
 
-        # Filter by project name (case-insensitive using uppercase)
+        # Filter by project name
         project_options_raw = df["Project"].dropna().unique().tolist()
         project_options_display = sorted(set([p.upper() for p in project_options_raw]))
         selected_projects = st.multiselect("🔍 Filter by project(s):", options=project_options_display)
@@ -292,9 +292,18 @@ with tab2:
         if selected_projects:
             df = df[df["Project"].str.upper().isin(selected_projects)]
 
-        # Create display DataFrame (hide internal ID)
+        # Filter by status
+        status_filter = st.selectbox("📌 Filter by status:", options=["All", "Not Started", "In Progress", "Completed"])
+        if status_filter != "All":
+            df = df[df["Status"].str.contains(status_filter, case=False)]
+
+        # Select All checkbox
+        select_all = st.checkbox("✅ Select All")
+        df["Select"] = select_all
+
+        # Create display DataFrame
         df_display = df[["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Select"]].copy()
-        id_map = df["id"].tolist()  # Keep ID separately for logic
+        id_map = df["id"].tolist()
 
         # Editable table
         edited_df = st.data_editor(
@@ -320,7 +329,7 @@ with tab2:
                     task["project"] = row["Project"]
                     task["action"] = row["Action"]
 
-        # Delete selected rows when button is clicked
+        # Delete selected rows
         if st.button("🗑️ Delete Selected"):
             selected_ids = [id_map[i] for i, row in edited_df.iterrows() if row["Select"]]
             st.session_state.deleted_ids.update(selected_ids)
@@ -330,5 +339,3 @@ with tab2:
                 if task["id"] not in st.session_state.deleted_ids
             ]
             st.rerun()
-
-
