@@ -45,20 +45,54 @@ def correct_weekdays(text):
         text = re.sub(rf"\b{wrong}\b", right, text, flags=re.IGNORECASE)
     return text
 
-def adjust_next_weekday(parsed_date, phrase):
-    if "next" in phrase.lower():
-        return parsed_date + datetime.timedelta(days=7)
-    return parsed_date
-
-def correct_year_if_needed(parsed_date, reference_date):
-    # If the parsed date is more than 1 year in the future, assume it's a misinterpretation
-    if parsed_date.year > reference_date.year + 1:
-        return parsed_date.replace(year=reference_date.year)
-    return parsed_date
-
 def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
 
+    # Step 1: Handle "next [weekday]"
+    weekday_match = re.search(r'\bnext\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b', corrected_message, re.IGNORECASE)
+    if weekday_match:
+        weekday_str = weekday_match.group(1).lower()
+        weekday_index = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].index(weekday_str)
+        days_ahead = (weekday_index - reference_date.weekday() + 7) % 7
+        days_ahead = days_ahead + 7 if days_ahead == 0 else days_ahead + 7
+        return reference_date + datetime.timedelta(days=days_ahead)
+
+    # Step 2: Handle "next week"
+    if re.search(r'\bnext\s+week\b', corrected_message, re.IGNORECASE):
+        days_until_next_monday = (7 - reference_date.weekday()) % 7 + 7
+        return reference_date + datetime.timedelta(days=days_until_next_monday)
+
+    # Step 3: Handle "next month"
+    if re.search(r'\bnext\s+month\b', corrected_message, re.IGNORECASE):
+        year = reference_date.year
+        month = reference_date.month + 1
+        if month > 12:
+            month = 1
+            year += 1
+        return datetime.datetime(year, month, 1)
+
+    # Step 4: Manually extract DD/MM or DD/MM/YY patterns
+    date_match = re.search(r'\b(\d{1,2})/-(?:/-)?\b', corrected_message)
+    if date_match:
+        day, month, year = date_match.groups()
+        day = int(day)
+        month = int(month)
+        if year:
+            year = int(year)
+            if year < 100:
+                year += 2000
+        else:
+            year = reference_date.year
+
+        try:
+            parsed_date = datetime.datetime(year, month, day)
+            if parsed_date < reference_date:
+                parsed_date = parsed_date.replace(year=year + 1)
+            return parsed_date
+        except ValueError:
+            pass
+
+    # Step 5: Fallback to search_dates
     results = search_dates(
         corrected_message,
         settings={
@@ -72,17 +106,10 @@ def extract_deadline_from_message(message, reference_date):
     if results:
         for phrase, parsed_date in results:
             if parsed_date:
-                # Debugging (optional)
-                st.write(f"🔍 Found phrase: '{phrase}' → Parsed: {parsed_date}")
-
                 parsed_date = correct_year_if_needed(parsed_date, reference_date)
-                parsed_date = adjust_next_weekday(parsed_date, phrase)
-
-                st.write(f"✅ Adjusted date: {parsed_date}")
                 return parsed_date
 
     return None
-
 
     '''
     # Match various date formats and relative phrases
