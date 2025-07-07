@@ -45,13 +45,20 @@ def correct_weekdays(text):
         text = re.sub(rf"\b{wrong}\b", right, text, flags=re.IGNORECASE)
     return text
 
-def extract_deadline_from_message(message, reference_date):
+def extract_deadline_from_message(message, reference_date, debug=False):
     corrected_message = correct_weekdays(message)
+
+    if debug:
+        st.markdown("### 🐞 Debugging Deadline Extraction")
+        st.write("**Corrected Message:**", corrected_message)
 
     # Step 1: Handle "next week"
     if re.search(r'\bnext\s+week\b', corrected_message, re.IGNORECASE):
         days_until_next_monday = (7 - reference_date.weekday()) % 7 + 7
-        return reference_date + datetime.timedelta(days=days_until_next_monday)
+        deadline = reference_date + datetime.timedelta(days=days_until_next_monday)
+        if debug:
+            st.write("Matched phrase: 'next week' →", deadline)
+        return deadline
 
     # Step 2: Handle "next month"
     if re.search(r'\bnext\s+month\b', corrected_message, re.IGNORECASE):
@@ -60,7 +67,10 @@ def extract_deadline_from_message(message, reference_date):
         if month > 12:
             month = 1
             year += 1
-        return datetime.datetime(year, month, 1)
+        deadline = datetime.datetime(year, month, 1)
+        if debug:
+            st.write("Matched phrase: 'next month' →", deadline)
+        return deadline
 
     # Step 3: Handle "next [weekday]"
     weekday_match = re.search(r'\bnext\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b', corrected_message, re.IGNORECASE)
@@ -68,7 +78,10 @@ def extract_deadline_from_message(message, reference_date):
         weekday_str = weekday_match.group(1).lower()
         weekday_index = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].index(weekday_str)
         days_ahead = (weekday_index - reference_date.weekday() + 7) % 7 + 7
-        return reference_date + datetime.timedelta(days=days_ahead)
+        deadline = reference_date + datetime.timedelta(days=days_ahead)
+        if debug:
+            st.write(f"Matched phrase: 'next {weekday_str}' →", deadline)
+        return deadline
 
     # Step 4: Handle "this [weekday]"
     this_weekday_match = re.search(r'\bthis\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b', corrected_message, re.IGNORECASE)
@@ -76,40 +89,34 @@ def extract_deadline_from_message(message, reference_date):
         weekday_str = this_weekday_match.group(1).lower()
         weekday_index = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].index(weekday_str)
         days_ahead = (weekday_index - reference_date.weekday()) % 7
-        return reference_date + datetime.timedelta(days=days_ahead)
+        deadline = reference_date + datetime.timedelta(days=days_ahead)
+        if debug:
+            st.write(f"Matched phrase: 'this {weekday_str}' →", deadline)
+        return deadline
 
-    # Step 5: General date parsing using regex and dateparser
-    deadline_phrases = re.findall(
-        r'\b(?:by|for|on|due)?\s*('
-        r'\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|'             # 08/07 or 08/07/2025
-        r'\d{4}-\d{2}-\d{2}|'                              # 2025-07-08
-        r'\d{1,2}(?:st|nd|rd|th)?\s+of\s+\w+|'             # 8th of July
-        r'\d{1,2}(?:st|nd|rd|th)?\s+\w+|'                  # 8th July
-        r'\w+\s+\d{1,2}(?:st|nd|rd|th)?|'                  # July 8th
-        r'\w+\s+\d{1,2},?\s*\d{4}|'                        # July 8, 2025
-        r'tomorrow|today|'
-        r'monday|tuesday|wednesday|thursday|friday|saturday|sunday'
-        r')\b',
+    # Step 5: Use search_dates to find all date mentions
+    found_dates = search_dates(
         corrected_message,
-        re.IGNORECASE
+        settings={
+            'RELATIVE_BASE': reference_date,
+            'PREFER_DATES_FROM': 'future',
+            'DATE_ORDER': 'DMY'
+        }
     )
 
-    for phrase in deadline_phrases:
-        if re.match(r'^\d{1,2}[/-]\d{1,2}$', phrase):
-            phrase += f'/{reference_date.year}'
+    if debug:
+        st.write("**Found Dates:**", found_dates)
 
-        parsed = dateparser.parse(
-            phrase,
-            settings={
-                'RELATIVE_BASE': reference_date,
-                'PREFER_DATES_FROM': 'future',
-                'DATE_ORDER': 'DMY',
-                'STRICT_PARSING': False
-            }
-        )
-        if parsed:
-            return parsed
+    if found_dates:
+        future_dates = [dt for _, dt in found_dates if dt > reference_date]
+        if future_dates:
+            selected = min(future_dates)
+            if debug:
+                st.write("**Selected Deadline:**", selected)
+            return selected
 
+    if debug:
+        st.write("❌ No valid future deadline found.")
     return None
 
 # Simulated fine-tuned BERT model output
