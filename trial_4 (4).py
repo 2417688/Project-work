@@ -17,6 +17,7 @@ import dateparser
 import streamlit as st
 import os
 import uuid
+from dateparser.search import search_dates
 
 WEEKDAY_CORRECTIONS = {
     # Abbreviations
@@ -49,8 +50,6 @@ def correct_weekdays(text):
 def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
     current_year = reference_date.year
-
-    from dateparser.search import search_dates
 
 def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
