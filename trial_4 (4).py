@@ -52,6 +52,19 @@ def extract_deadline_from_message(message, reference_date, debug=False):
         st.markdown("### 🐞 Debugging Deadline Extraction")
         st.write("**Corrected Message:**", corrected_message)
 
+    # Step 0: Check for ISO format (YYYY-MM-DD)
+    iso_match = re.search(r'\b(\d{4}-\d{2}-\d{2})\b', corrected_message)
+    if iso_match:
+        try:
+            iso_date = datetime.datetime.strptime(iso_match.group(1), "%Y-%m-%d")
+            if iso_date > reference_date:
+                if debug:
+                    st.write("Matched ISO date:", iso_match.group(1), "→", iso_date)
+                return iso_date
+        except Exception as e:
+            if debug:
+                st.write("Error parsing ISO date:", e)
+
     # Step 1: Handle "next week"
     if re.search(r'\bnext\s+week\b', corrected_message, re.IGNORECASE):
         days_until_next_monday = (7 - reference_date.weekday()) % 7 + 7
@@ -148,7 +161,9 @@ def extract_deadline_from_message(message, reference_date, debug=False):
         false_positives = {"to", "on", "at", "in", "by", "are"}
         filtered_dates = [
             (text, dt) for text, dt in found_dates
-            if dt > reference_date and text.strip().lower() not in false_positives
+            if dt > reference_date and (
+                any(char.isdigit() for char in text) or text.strip().lower() not in false_positives
+            )
         ]
 
         if debug:
