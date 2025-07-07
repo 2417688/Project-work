@@ -259,10 +259,10 @@ with tab2:
                 df[col] = ""
         df = df[column_order]
 
-        # Multiselect filter for project names
+        # Filter by project name using multiselect
         project_options = df["Project"].dropna().unique().tolist()
         selected_projects = st.multiselect("🔍 Filter by project(s):", options=sorted(project_options))
-        
+
         if selected_projects:
             df = df[df["Project"].isin(selected_projects)]
 
@@ -279,10 +279,10 @@ with tab2:
         # Define status options with emojis
         status_options = ["🔴 Not Started", "🟡 In Progress", "🟢 Completed"]
 
-        # Editable table with built-in sorting and deletion
+        # Editable and sortable table
         edited_df = st.data_editor(
             df,
-            num_rows="dynamic",
+            num_rows="fixed",  # enables sorting
             use_container_width=True,
             column_config={
                 "Status": st.column_config.SelectboxColumn("Status", options=status_options),
@@ -292,21 +292,18 @@ with tab2:
             hide_index=True
         )
 
-        # Detect deletions via built-in trash icon
-        edited_ids = set()
-        if "Message" in edited_df.columns:
-            edited_messages = edited_df["Message"].tolist()
-            for task in visible_tasks:
-                if task["message"] in edited_messages:
-                    edited_ids.add(task["id"])
-
-        for task in visible_tasks:
-            if task["id"] not in edited_ids:
-                st.session_state.deleted_ids.add(task["id"])
+        # Custom delete mechanism
+        delete_rows = st.multiselect("🗑️ Select rows to delete:", options=edited_df.index.tolist())
+        if st.button("Delete Selected"):
+            for idx in delete_rows:
+                task_message = edited_df.loc[idx, "Message"]
+                for task in visible_tasks:
+                    if task["message"] == task_message:
+                        st.session_state.deleted_ids.add(task["id"])
+            st.experimental_rerun()
 
         # Update session state to remove deleted tasks
         st.session_state.escalated_tasks = [
             task for task in st.session_state.escalated_tasks
             if task["id"] not in st.session_state.deleted_ids
         ]
-
