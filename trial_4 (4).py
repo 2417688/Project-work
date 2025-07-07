@@ -94,7 +94,44 @@ def extract_deadline_from_message(message, reference_date, debug=False):
             st.write(f"Matched phrase: 'this {weekday_str}' →", deadline)
         return deadline
 
-    # Step 5: Use search_dates to find all date mentions
+    # Step 5: Regex-based date phrase matching
+    deadline_phrases = re.findall(
+        r'\b(?:by|for|on|due)?\s*('
+        r'\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|'             # 08/07 or 08/07/2025
+        r'\d{4}-\d{2}-\d{2}|'                              # 2025-07-08
+        r'\d{1,2}(?:st|nd|rd|th)?\s+of\s+\w+|'             # 8th of July
+        r'\d{1,2}(?:st|nd|rd|th)?\s+\w+|'                  # 8th July
+        r'\w+\s+\d{1,2}(?:st|nd|rd|th)?|'                  # July 8th
+        r'\w+\s+\d{1,2},?\s*\d{4}|'                        # July 8, 2025
+        r'tomorrow|today|'
+        r'monday|tuesday|wednesday|thursday|friday|saturday|sunday'
+        r')\b',
+        corrected_message,
+        re.IGNORECASE
+    )
+
+    if debug and deadline_phrases:
+        st.write("**Regex-Matched Phrases:**", deadline_phrases)
+
+    for phrase in deadline_phrases:
+        try:
+            parsed = dateparser.parse(
+                phrase,
+                settings={
+                    'RELATIVE_BASE': reference_date,
+                    'PREFER_DATES_FROM': 'future',
+                    'DATE_ORDER': 'DMY'
+                }
+            )
+            if parsed and parsed > reference_date:
+                if debug:
+                    st.write(f"Parsed from regex phrase '{phrase}' →", parsed)
+                return parsed
+        except Exception as e:
+            if debug:
+                st.write(f"Error parsing phrase '{phrase}':", e)
+
+    # Step 6: Use search_dates as fallback
     found_dates = search_dates(
         corrected_message,
         settings={
@@ -105,15 +142,23 @@ def extract_deadline_from_message(message, reference_date, debug=False):
     )
 
     if debug:
-        st.write("**Found Dates:**", found_dates)
+        st.write("**Found Dates (search_dates):**", found_dates)
 
     if found_dates:
-        first_text, first_date = found_dates[0]
-        if first_date > reference_date:
-            if debug:
-                st.write("**First Found Date:**", first_text, "→", first_date)
-            return first_date  
+        false_positives = {"to", "on", "at", "in", "by", "are"}
+        filtered_dates = [
+            (text, dt) for text, dt in found_dates
+            if dt > reference_date and text.strip().lower() not in false_positives
+        ]
 
+        if debug:
+            st.write("**Filtered Dates:**", filtered_dates)
+
+        if filtered_dates:
+            first_text, first_date = filtered_dates[0]
+            if debug:
+                st.write("**Selected Deadline (first valid):**", first_text, "→", first_date)
+            return first_date
 
     if debug:
         st.write("❌ No valid future deadline found.")
