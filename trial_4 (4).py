@@ -48,28 +48,12 @@ def correct_weekdays(text):
 def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
 
-    # Step 1: Match DD/MM, DD-MM, or DD.MM (with optional year)
-    date_match = re.search(r'\b(\d{1,2})./-(?:./-)?\b', corrected_message)
-    if date_match:
-        day, month, year = date_match.groups()
-        day = int(day)
-        month = int(month)
-        year = int(year) if year else reference_date.year
-
-        try:
-            parsed_date = datetime.datetime(year, month, day)
-            if parsed_date < reference_date:
-                parsed_date = parsed_date.replace(year=year + 1)
-            return parsed_date
-        except ValueError:
-            pass
-
-    # Step 2: Handle "next week"
+    # Step 1: Handle "next week"
     if re.search(r'\bnext\s+week\b', corrected_message, re.IGNORECASE):
         days_until_next_monday = (7 - reference_date.weekday()) % 7 + 7
         return reference_date + datetime.timedelta(days=days_until_next_monday)
 
-    # Step 3: Handle "next month"
+    # Step 2: Handle "next month"
     if re.search(r'\bnext\s+month\b', corrected_message, re.IGNORECASE):
         year = reference_date.year
         month = reference_date.month + 1
@@ -78,13 +62,43 @@ def extract_deadline_from_message(message, reference_date):
             year += 1
         return datetime.datetime(year, month, 1)
 
-    # Step 4: Handle "next [weekday]"
+    # Step 3: Handle "next [weekday]"
     weekday_match = re.search(r'\bnext\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b', corrected_message, re.IGNORECASE)
     if weekday_match:
         weekday_str = weekday_match.group(1).lower()
         weekday_index = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].index(weekday_str)
         days_ahead = (weekday_index - reference_date.weekday() + 7) % 7 + 7
         return reference_date + datetime.timedelta(days=days_ahead)
+
+    # Step 4: Match various date formats and relative phrases
+    deadline_phrases = re.findall(
+        r'\b(?:by|for|on|due)?\s*('
+        r'\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|'             # 08/07 or 08/07/2025
+        r'\d{4}-\d{2}-\d{2}|'                              # 2025-07-08
+        r'\d{1,2}(?:st|nd|rd|th)?\s+of\s+\w+|'             # 8th of July
+        r'\d{1,2}(?:st|nd|rd|th)?\s+\w+|'                  # 8th July
+        r'\w+\s+\d{1,2}(?:st|nd|rd|th)?|'                  # July 8th
+        r'\w+\s+\d{1,2},?\s*\d{4}|'                        # July 8, 2025
+        r'this\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)|'
+        r'tomorrow|today|'
+        r'\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b'
+        r')',
+        corrected_message,
+        re.IGNORECASE
+    )
+
+    for phrase in deadline_phrases:
+        parsed = dateparser.parse(
+            phrase,
+            settings={
+                'RELATIVE_BASE': reference_date,
+                'PREFER_DATES_FROM': 'future',
+                'DATE_ORDER': 'DMY',
+                'STRICT_PARSING': False
+            }
+        )
+        if parsed:
+            return parsed
 
     return None
 
