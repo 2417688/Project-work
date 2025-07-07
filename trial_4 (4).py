@@ -247,6 +247,7 @@ with tab1:
         if result["escalate"] and result["id"] not in st.session_state.deleted_ids:
             st.success("✅ Task added to dashboard.")
             st.session_state.escalated_tasks.append(result)
+
 with tab2:
     st.header("📋 Escalated Tasks Dashboard")
 
@@ -324,7 +325,8 @@ with tab2:
         )
 
         # Update session state with edits
-        for i, row in edited_df.iterrows():
+        for i in range(len(edited_df)):
+            row = edited_df.iloc[i]
             if i >= len(id_map):
                 continue
             task_id = id_map[i]
@@ -336,7 +338,7 @@ with tab2:
 
         # Delete selected rows
         if st.button("🗑️ Delete Selected"):
-            selected_ids = [id_map[i] for i, row in edited_df.iterrows() if row["Select"] and i < len(id_map)]
+            selected_ids = [id_map[i] for i in range(len(edited_df)) if edited_df.iloc[i]["Select"] and i < len(id_map)]
             st.session_state.deleted_ids.update(selected_ids)
 
             st.session_state.escalated_tasks = [
