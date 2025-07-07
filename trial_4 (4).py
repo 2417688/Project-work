@@ -258,24 +258,14 @@ with tab2:
         df["Project"] = df["project"]
         df["Action"] = df["action"]
         df["Message"] = df["message"]
-        df["Delete"] = False  # Add checkbox column
-        df["id"] = [task["id"] for task in visible_tasks]  # Keep track of IDs
-
-        column_order = ["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Delete"]
-        df = df[column_order + ["id"]]  # Keep ID for internal use
+        df["Select"] = False  # Checkbox column for deletion
 
         # Filter by project name using multiselect (case-insensitive using uppercase)
         project_options = df["Project"].dropna().unique().tolist()
         selected_projects = st.multiselect("🔍 Filter by project(s):", options=sorted(project_options))
 
         if selected_projects:
-            # Convert both sides to uppercase for comparison
             df = df[df["Project"].str.upper().isin([p.upper() for p in selected_projects])]
-
-
-        # Add checkbox column for selection
-        df["Select"] = False
-        df["id"] = [task["id"] for task in visible_tasks]  # Keep track of IDs
 
         # Editable table
         edited_df = st.data_editor(
@@ -302,9 +292,8 @@ with tab2:
 
         # Delete selected rows when button is clicked
         if st.button("🗑️ Delete Selected"):
-            for _, row in edited_df.iterrows():
-                if row["Select"]:
-                    st.session_state.deleted_ids.add(row["id"])
+            selected_ids = edited_df[edited_df["Select"] == True]["id"].tolist()
+            st.session_state.deleted_ids.update(selected_ids)
 
             # Remove deleted tasks
             st.session_state.escalated_tasks = [
