@@ -259,6 +259,13 @@ with tab2:
                 df[col] = ""
         df = df[column_order]
 
+        # Multiselect filter for project names
+        project_options = df["Project"].dropna().unique().tolist()
+        selected_projects = st.multiselect("🔍 Filter by project(s):", options=sorted(project_options))
+        
+        if selected_projects:
+            df = df[df["Project"].isin(selected_projects)]
+
         # Add visual status indicator
         def status_emoji(status):
             return {
@@ -302,3 +309,4 @@ with tab2:
             task for task in st.session_state.escalated_tasks
             if task["id"] not in st.session_state.deleted_ids
         ]
+
