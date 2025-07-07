@@ -177,8 +177,8 @@ def generate_response(urgency, importance, escalate):
         return "✅ This message does not require immediate attention. You can monitor it for now."
 
 # Analyze a message and return structured result
-def analyze_message(message, message_date):
-    deadline = extract_deadline_from_message(message, message_date)
+def analyze_message(message, message_date, debug=False):
+    deadline = extract_deadline_from_message(message, message_date, debug=debug) #remove debug when you need to 
     urgency_rule_score = rule_based_urgency(message_date, deadline)
     urgency_flag_score = rule_based_flags(message)
     urgency_llm_score, importance_llm_score = simulate_llm_scores(message)
@@ -226,16 +226,18 @@ with tab1:
     # Date input
     message_date_input = st.date_input("Date the message was sent", datetime.date.today(), format="DD/MM/YYYY")
 
-    # Project name input (re-added)
+    # Project name input
     project_name_input = st.text_input("Enter project name:")
+
+    # Debug mode checkbox
+    debug_mode = st.checkbox("🐞 Enable debugging")
 
     # Analyze button
     analyze_button = st.button("Analyze")
 
     if analyze_button and full_message_input:
         message_date = datetime.datetime.combine(message_date_input, datetime.datetime.min.time())
-        result = analyze_message(full_message_input, message_date, debug=True)
-
+        result = analyze_message(full_message_input, message_date, debug=debug_mode)
 
         # Add project name if provided
         if project_name_input:
