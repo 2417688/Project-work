@@ -297,14 +297,20 @@ with tab2:
 
         # Select All checkbox
         select_all = st.checkbox("✅ Select All")
-        df["Select"] = select_all
 
         # Rebuild ID map after filtering
         id_map = df["id"].tolist()
 
-        # Show editable table only
+        # Create editor DataFrame
+        df_editor = df[["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Select"]].copy()
+
+        # Apply Select All only to filtered rows
+        if select_all:
+            df_editor["Select"] = True
+
+        # Editable table
         edited_df = st.data_editor(
-            df[["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Select"]],
+            df_editor,
             use_container_width=True,
             column_config={
                 "Status": st.column_config.SelectboxColumn("Status", options=["🔴 Not Started", "🟡 In Progress", "🟢 Completed"]),
@@ -320,7 +326,7 @@ with tab2:
         # Update session state with edits
         for i, row in edited_df.iterrows():
             if i >= len(id_map):
-                continue  # Prevent index error
+                continue
             task_id = id_map[i]
             for task in st.session_state.escalated_tasks:
                 if task["id"] == task_id:
