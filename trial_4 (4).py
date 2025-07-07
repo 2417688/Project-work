@@ -48,7 +48,37 @@ def correct_weekdays(text):
 def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
 
-    # Match various date formats and relative phrases
+    # Step 1: Handle "next week"
+    if re.search(r'\bnext\s+week\b', corrected_message, re.IGNORECASE):
+        days_until_next_monday = (7 - reference_date.weekday()) % 7 + 7
+        return reference_date + datetime.timedelta(days=days_until_next_monday)
+
+    # Step 2: Handle "next month"
+    if re.search(r'\bnext\s+month\b', corrected_message, re.IGNORECASE):
+        year = reference_date.year
+        month = reference_date.month + 1
+        if month > 12:
+            month = 1
+            year += 1
+        return datetime.datetime(year, month, 1)
+
+    # Step 3: Handle "next [weekday]"
+    weekday_match = re.search(r'\bnext\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b', corrected_message, re.IGNORECASE)
+    if weekday_match:
+        weekday_str = weekday_match.group(1).lower()
+        weekday_index = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].index(weekday_str)
+        days_ahead = (weekday_index - reference_date.weekday() + 7) % 7 + 7
+        return reference_date + datetime.timedelta(days=days_ahead)
+
+    # Step 4: Handle "this [weekday]"
+    this_weekday_match = re.search(r'\bthis\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b', corrected_message, re.IGNORECASE)
+    if this_weekday_match:
+        weekday_str = this_weekday_match.group(1).lower()
+        weekday_index = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].index(weekday_str)
+        days_ahead = (weekday_index - reference_date.weekday()) % 7
+        return reference_date + datetime.timedelta(days=days_ahead)
+
+    # Step 5: General date parsing using regex and dateparser
     deadline_phrases = re.findall(
         r'\b(?:by|for|on|due)?\s*('
         r'\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|'             # 08/07 or 08/07/2025
@@ -57,8 +87,6 @@ def extract_deadline_from_message(message, reference_date):
         r'\d{1,2}(?:st|nd|rd|th)?\s+\w+|'                  # 8th July
         r'\w+\s+\d{1,2}(?:st|nd|rd|th)?|'                  # July 8th
         r'\w+\s+\d{1,2},?\s*\d{4}|'                        # July 8, 2025
-        r'(?:next\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday))|'
-        r'(?:this\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday))|'
         r'tomorrow|today|'
         r'monday|tuesday|wednesday|thursday|friday|saturday|sunday'
         r')\b',
