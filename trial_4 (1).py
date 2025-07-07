@@ -226,12 +226,20 @@ with tab2:
     else:
         df = pd.DataFrame(visible_tasks)
 
-        # Format and ensure date columns exist
-        df["Date of Message"] = pd.to_datetime(df.get("date_sent", pd.NaT), errors="coerce").apply(
-        lambda x: x.strftime("%d/%m/%Y") if pd.notnull(x) else "")
-
-        df["Deadline"] = pd.to_datetime(df.get("deadline", pd.NaT), errors="coerce").apply(
-        lambda x: x.strftime("%d/%m/%Y") if pd.notnull(x) else "")
+        # Ensure 'deadline' and 'date_sent' columns exist
+        if "deadline" not in df.columns:
+            df["deadline"] = None
+        if "date_sent" not in df.columns:
+            df["date_sent"] = None
+        
+        # Format dates safely
+        df["Date of Message"] = pd.to_datetime(df["date_sent"], errors="coerce").apply(
+            lambda x: x.strftime("%d/%m/%Y") if pd.notnull(x) else ""
+        )
+        
+        df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").apply(
+            lambda x: x.strftime("%d/%m/%Y") if pd.notnull(x) else ""
+        )
 
         # Rename and reorder columns
         df = df.rename(columns={
