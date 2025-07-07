@@ -247,7 +247,98 @@ with tab1:
         if result["escalate"] and result["id"] not in st.session_state.deleted_ids:
             st.success("✅ Task added to dashboard.")
             st.session_state.escalated_tasks.append(result)
+with tab2:
+    st.header("📋 Escalated Tasks Dashboard")
 
+    if "escalated_tasks" not in st.session_state:
+        st.session_state.escalated_tasks = []
+
+    if "deleted_ids" not in st.session_state:
+        st.session_state.deleted_ids = set()
+
+    visible_tasks = [
+        task for task in st.session_state.escalated_tasks
+        if task["id"] not in st.session_state.deleted_ids
+    ]
+
+    if not visible_tasks:
+        st.info("No escalated tasks yet.")
+    else:
+        df = pd.DataFrame(visible_tasks)
+
+        # Format and rename columns
+        df["Date of Message"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
+        df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%d/%m/%Y")
+
+        def status_emoji(status):
+            return {
+                "Not Started": "🔴 Not Started",
+                "In Progress": "🟡 In Progress",
+                "Completed": "🟢 Completed"
+            }.get(status, status)
+
+        df["Status"] = df["status"].apply(status_emoji)
+        df["Project"] = df["project"]
+        df["Action"] = df["action"]
+        df["Message"] = df["message"]
+        df["Select"] = False
+
+        # Filter by project name
+        project_options_raw = df["Project"].dropna().unique().tolist()
+        project_options_display = sorted(set([p.upper() for p in project_options_raw]))
+        selected_projects = st.multiselect("🔍 Filter by project(s):", options=project_options_display)
+        if selected_projects:
+            df = df[df["Project"].str.upper().isin(selected_projects)]
+
+        # Filter by status
+        status_filter = st.selectbox("📌 Filter by status:", options=["All", "Not Started", "In Progress", "Completed"])
+        if status_filter != "All":
+            df = df[df["Status"].str.contains(status_filter, case=False)]
+
+        # Select All checkbox
+        select_all = st.checkbox("✅ Select All")
+        df["Select"] = select_all
+
+        # Rebuild ID map after filtering
+        id_map = df["id"].tolist()
+
+        # Show editable table only
+        edited_df = st.data_editor(
+            df[["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Select"]],
+            use_container_width=True,
+            column_config={
+                "Status": st.column_config.SelectboxColumn("Status", options=["🔴 Not Started", "🟡 In Progress", "🟢 Completed"]),
+                "Project": st.column_config.TextColumn("Project"),
+                "Action": st.column_config.TextColumn("Action"),
+                "Select": st.column_config.CheckboxColumn("Select")
+            },
+            disabled=["Date of Message", "Deadline", "Message"],
+            hide_index=True,
+            key="dashboard_editor"
+        )
+
+        # Update session state with edits
+        for i, row in edited_df.iterrows():
+            if i >= len(id_map):
+                continue  # Prevent index error
+            task_id = id_map[i]
+            for task in st.session_state.escalated_tasks:
+                if task["id"] == task_id:
+                    task["status"] = row["Status"].split(" ", 1)[-1]
+                    task["project"] = row["Project"]
+                    task["action"] = row["Action"]
+
+        # Delete selected rows
+        if st.button("🗑️ Delete Selected"):
+            selected_ids = [id_map[i] for i, row in edited_df.iterrows() if row["Select"] and i < len(id_map)]
+            st.session_state.deleted_ids.update(selected_ids)
+
+            st.session_state.escalated_tasks = [
+                task for task in st.session_state.escalated_tasks
+                if task["id"] not in st.session_state.deleted_ids
+            ]
+            st.rerun()
+'''
 with tab2:
     st.header("📋 Escalated Tasks Dashboard")
 
@@ -339,3 +430,4 @@ with tab2:
                 if task["id"] not in st.session_state.deleted_ids
             ]
             st.rerun()
+'''
