@@ -259,18 +259,20 @@ with tab2:
                 df[col] = ""
         df = df[column_order]
 
-        # Optional: Filter by project
-        project_filter = st.text_input("🔍 Filter by project name (case-insensitive):", "")
-        if project_filter:
-            df = df[df["Project"].str.contains(project_filter, case=False, na=False)]
+        # Add visual status indicator
+        def status_emoji(status):
+            return {
+                "Not Started": "🔴 Not Started",
+                "In Progress": "🟡 In Progress",
+                "Completed": "🟢 Completed"
+            }.get(status, status)
 
-        # Optional: Sorting
-        sort_column = st.selectbox("📊 Sort by column:", df.columns, index=0)
-        sort_order = st.radio("Sort order", ["Ascending", "Descending"], horizontal=True)
-        df = df.sort_values(by=sort_column, ascending=(sort_order == "Ascending"))
+        df["Status"] = df["Status"].apply(status_emoji)
 
-        # Editable + sortable table
-        status_options = ["Not Started", "In Progress", "Completed"]
+        # Define status options with emojis
+        status_options = ["🔴 Not Started", "🟡 In Progress", "🟢 Completed"]
+
+        # Editable table with built-in sorting and deletion
         edited_df = st.data_editor(
             df,
             num_rows="dynamic",
@@ -284,12 +286,15 @@ with tab2:
         )
 
         # Detect deletions via built-in trash icon
-        remaining_messages = edited_df["Message"].tolist()
-        remaining_ids = []
+        edited_ids = set()
+        if "Message" in edited_df.columns:
+            edited_messages = edited_df["Message"].tolist()
+            for task in visible_tasks:
+                if task["message"] in edited_messages:
+                    edited_ids.add(task["id"])
+
         for task in visible_tasks:
-            if task["message"] in remaining_messages:
-                remaining_ids.append(task["id"])
-            else:
+            if task["id"] not in edited_ids:
                 st.session_state.deleted_ids.add(task["id"])
 
         # Update session state to remove deleted tasks
@@ -297,14 +302,3 @@ with tab2:
             task for task in st.session_state.escalated_tasks
             if task["id"] not in st.session_state.deleted_ids
         ]
-
-        # Row coloring based on status
-        def highlight_row(row):
-            color = {
-                "Not Started": "#ffe6e6",   # pale red
-                "In Progress": "#fff5cc",   # pale amber
-                "Completed": "#e6ffe6"      # pale green
-            }.get(row["Status"], "white")
-            return [f"background-color: {color}"] * len(row)
-
-        st.dataframe(edited_df.style.apply(highlight_row, axis=1))
