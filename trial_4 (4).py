@@ -107,7 +107,7 @@ def extract_deadline_from_message(message, reference_date):
 
     return None
     '''
-    def extract_deadline_from_message(message, reference_date):
+def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
 
     # Match various date formats and relative phrases
