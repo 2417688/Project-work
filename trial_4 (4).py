@@ -240,13 +240,13 @@ with tab2:
     if not visible_tasks:
         st.info("No escalated tasks yet.")
     else:
+        # Create DataFrame from visible tasks
         df = pd.DataFrame(visible_tasks)
 
-        # Format dates
+        # Format and rename columns for display
         df["Date of Message"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
         df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%d/%m/%Y")
 
-        # Add status emojis
         def status_emoji(status):
             return {
                 "Not Started": "🔴 Not Started",
@@ -258,18 +258,23 @@ with tab2:
         df["Project"] = df["project"]
         df["Action"] = df["action"]
         df["Message"] = df["message"]
-        df["Select"] = False  # Checkbox column for deletion
+        df["Select"] = False  # Checkbox for deletion
 
-        # Filter by project name using multiselect (case-insensitive using uppercase)
+        # Filter by project name (case-insensitive using uppercase)
         project_options = df["Project"].dropna().unique().tolist()
         selected_projects = st.multiselect("🔍 Filter by project(s):", options=sorted(project_options))
 
         if selected_projects:
             df = df[df["Project"].str.upper().isin([p.upper() for p in selected_projects])]
 
+        # Keep only the columns to display
+        display_columns = ["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Select"]
+        df_display = df[display_columns].copy()
+        df_display["id"] = df["id"]  # Keep ID for internal tracking
+
         # Editable table
         edited_df = st.data_editor(
-            df,
+            df_display,
             use_container_width=True,
             column_config={
                 "Status": st.column_config.SelectboxColumn("Status", options=["🔴 Not Started", "🟡 In Progress", "🟢 Completed"]),
