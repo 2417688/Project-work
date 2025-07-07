@@ -72,11 +72,17 @@ def extract_deadline_from_message(message, reference_date):
     if results:
         for phrase, parsed_date in results:
             if parsed_date:
+                # Debugging (optional)
+                # st.write(f"🔍 Found phrase: '{phrase}' → Parsed: {parsed_date}")
+
                 parsed_date = correct_year_if_needed(parsed_date, reference_date)
                 parsed_date = adjust_next_weekday(parsed_date, phrase)
+
+                # st.write(f"✅ Adjusted date: {parsed_date}")
                 return parsed_date
 
     return None
+
 
     '''
     # Match various date formats and relative phrases
