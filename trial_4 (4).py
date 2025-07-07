@@ -311,4 +311,5 @@ with tab2:
                 task for task in st.session_state.escalated_tasks
                 if task["id"] not in st.session_state.deleted_ids
             ]
-            st.experimental_rerun()
+            st.rerun()
+
