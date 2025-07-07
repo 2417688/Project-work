@@ -263,11 +263,19 @@ with tab2:
 
         column_order = ["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Delete"]
         df = df[column_order + ["id"]]  # Keep ID for internal use
-        # Filter by project
+
+        # Filter by project name using multiselect (case-insensitive using uppercase)
         project_options = df["Project"].dropna().unique().tolist()
         selected_projects = st.multiselect("🔍 Filter by project(s):", options=sorted(project_options))
+
         if selected_projects:
-            df = df[df["Project"].isin(selected_projects)]
+            # Convert both sides to uppercase for comparison
+            df = df[df["Project"].str.upper().isin([p.upper() for p in selected_projects])]
+
+
+        # Add checkbox column for selection
+        df["Select"] = False
+        df["id"] = [task["id"] for task in visible_tasks]  # Keep track of IDs
 
         # Editable table
         edited_df = st.data_editor(
@@ -277,7 +285,7 @@ with tab2:
                 "Status": st.column_config.SelectboxColumn("Status", options=["🔴 Not Started", "🟡 In Progress", "🟢 Completed"]),
                 "Project": st.column_config.TextColumn("Project"),
                 "Action": st.column_config.TextColumn("Action"),
-                "Delete": st.column_config.CheckboxColumn("Delete")
+                "Select": st.column_config.CheckboxColumn("Select")
             },
             disabled=["Date of Message", "Deadline", "Message"],
             hide_index=True,
@@ -288,14 +296,19 @@ with tab2:
         for _, row in edited_df.iterrows():
             for task in st.session_state.escalated_tasks:
                 if task["id"] == row["id"]:
-                    task["status"] = row["Status"].split(" ", 1)[-1]  # Remove emoji
+                    task["status"] = row["Status"].split(" ", 1)[-1]
                     task["project"] = row["Project"]
                     task["action"] = row["Action"]
-                    if row["Delete"]:
-                        st.session_state.deleted_ids.add(task["id"])
 
-        # Remove deleted tasks
-        st.session_state.escalated_tasks = [
-            task for task in st.session_state.escalated_tasks
-            if task["id"] not in st.session_state.deleted_ids
-        ]
+        # Delete selected rows when button is clicked
+        if st.button("🗑️ Delete Selected"):
+            for _, row in edited_df.iterrows():
+                if row["Select"]:
+                    st.session_state.deleted_ids.add(row["id"])
+
+            # Remove deleted tasks
+            st.session_state.escalated_tasks = [
+                task for task in st.session_state.escalated_tasks
+                if task["id"] not in st.session_state.deleted_ids
+            ]
+            st.experimental_rerun()
