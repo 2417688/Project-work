@@ -44,7 +44,7 @@ def correct_weekdays(text):
     for wrong, right in WEEKDAY_CORRECTIONS.items():
         text = re.sub(rf"\b{wrong}\b", right, text, flags=re.IGNORECASE)
     return text
-
+'''
 def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
     current_year = reference_date.year
@@ -106,9 +106,9 @@ def extract_deadline_from_message(message, reference_date):
             return parsed
 
     return None
-
-
     '''
+
+
     # Match various date formats and relative phrases
     deadline_phrases = re.findall(
         r'\b(?:by|for|on|due)?\s*('
@@ -163,7 +163,7 @@ def extract_deadline_from_message(message, reference_date):
             return parsed
 
     return None
-    '''
+  
 
 # Simulated fine-tuned BERT model output
 def simulate_llm_scores(message):
