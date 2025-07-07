@@ -240,10 +240,9 @@ with tab2:
     if not visible_tasks:
         st.info("No escalated tasks yet.")
     else:
-        # Create DataFrame from visible tasks
         df = pd.DataFrame(visible_tasks)
 
-        # Format and rename columns for display
+        # Format and rename columns
         df["Date of Message"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
         df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%d/%m/%Y")
 
@@ -261,16 +260,18 @@ with tab2:
         df["Select"] = False  # Checkbox for deletion
 
         # Filter by project name (case-insensitive using uppercase)
-        project_options = df["Project"].dropna().unique().tolist()
-        selected_projects = st.multiselect("🔍 Filter by project(s):", options=sorted(project_options))
+        project_options_raw = df["Project"].dropna().unique().tolist()
+        project_options_display = sorted(set([p.upper() for p in project_options_raw]))
+        selected_projects = st.multiselect("🔍 Filter by project(s):", options=project_options_display)
 
         if selected_projects:
-            df = df[df["Project"].str.upper().isin([p.upper() for p in selected_projects])]
+            df = df[df["Project"].str.upper().isin(selected_projects)]
 
-        # Keep only the columns to display
-        display_columns = ["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Select"]
-        df_display = df[display_columns].copy()
-        df_display["id"] = df["id"]  # Keep ID for internal tracking
+        # Create a separate DataFrame for display (no ID)
+        df_display = df[["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Select"]].copy()
+
+        # Keep ID separately for logic
+        df_display["internal_id"] = df["id"]
 
         # Editable table
         edited_df = st.data_editor(
@@ -290,20 +291,20 @@ with tab2:
         # Update session state with edits
         for _, row in edited_df.iterrows():
             for task in st.session_state.escalated_tasks:
-                if task["id"] == row["id"]:
+                if task["id"] == row["internal_id"]:
                     task["status"] = row["Status"].split(" ", 1)[-1]
                     task["project"] = row["Project"]
                     task["action"] = row["Action"]
 
         # Delete selected rows when button is clicked
         if st.button("🗑️ Delete Selected"):
-            selected_ids = edited_df[edited_df["Select"] == True]["id"].tolist()
+            selected_ids = edited_df[edited_df["Select"] == True]["internal_id"].tolist()
             st.session_state.deleted_ids.update(selected_ids)
 
-            # Remove deleted tasks
             st.session_state.escalated_tasks = [
                 task for task in st.session_state.escalated_tasks
                 if task["id"] not in st.session_state.deleted_ids
             ]
             st.rerun()
+
 
