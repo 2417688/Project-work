@@ -68,8 +68,8 @@ def extract_deadline_from_message(message, reference_date):
         re.IGNORECASE
     )
 
+    # Try parsing each matched phrase
     for phrase in deadline_phrases:
-        # If the phrase is a short date like 08/07, append the current year
         if re.match(r'^\d{1,2}[/-]\d{1,2}$', phrase):
             phrase += f'/{current_year}'
 
@@ -80,6 +80,24 @@ def extract_deadline_from_message(message, reference_date):
                 'PREFER_DATES_FROM': 'future',
                 'DATE_ORDER': 'DMY',
                 'STRICT_PARSING': False
+            }
+        )
+        if parsed:
+            return parsed
+
+    # Fallback: explicitly search for "next/this + weekday" if not caught above
+    fallback_phrases = re.findall(
+        r'\b(next|this)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b',
+        corrected_message,
+        re.IGNORECASE
+    )
+    for modifier, weekday in fallback_phrases:
+        phrase = f"{modifier} {weekday}"
+        parsed = dateparser.parse(
+            phrase,
+            settings={
+                'RELATIVE_BASE': reference_date,
+                'PREFER_DATES_FROM': 'future'
             }
         )
         if parsed:
