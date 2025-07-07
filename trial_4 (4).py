@@ -107,8 +107,11 @@ def extract_deadline_from_message(message, reference_date):
 
     return None
     '''
+    def extract_deadline_from_message(message, reference_date):
+    corrected_message = correct_weekdays(message)
+
     # Match various date formats and relative phrases
-deadline_phrases = re.findall(
+    deadline_phrases = re.findall(
         r'\b(?:by|for|on|due)?\s*('
         r'\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|'             # 08/07 or 08/07/2025
         r'\d{4}-\d{2}-\d{2}|'                              # 2025-07-08
@@ -125,10 +128,9 @@ deadline_phrases = re.findall(
         re.IGNORECASE
     )
 
-    # Try parsing each matched phrase
     for phrase in deadline_phrases:
         if re.match(r'^\d{1,2}[/-]\d{1,2}$', phrase):
-            phrase += f'/{current_year}'
+            phrase += f'/{reference_date.year}'
 
         parsed = dateparser.parse(
             phrase,
@@ -142,26 +144,7 @@ deadline_phrases = re.findall(
         if parsed:
             return parsed
 
-    # Fallback: explicitly search for "next/this + weekday" if not caught above
-    fallback_phrases = re.findall(
-        r'\b(next|this)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b',
-        corrected_message,
-        re.IGNORECASE
-    )
-    for modifier, weekday in fallback_phrases:
-        phrase = f"{modifier} {weekday}"
-        parsed = dateparser.parse(
-            phrase,
-            settings={
-                'RELATIVE_BASE': reference_date,
-                'PREFER_DATES_FROM': 'future'
-            }
-        )
-        if parsed:
-            return parsed
-
     return None
-  
 
 # Simulated fine-tuned BERT model output
 def simulate_llm_scores(message):
