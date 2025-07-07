@@ -234,7 +234,8 @@ with tab1:
 
     if analyze_button and full_message_input:
         message_date = datetime.datetime.combine(message_date_input, datetime.datetime.min.time())
-        result = analyze_message(full_message_input, message_date)
+        result = analyze_message(full_message_input, message_date, debug=True)
+
 
         # Add project name if provided
         if project_name_input:
