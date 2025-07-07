@@ -267,11 +267,9 @@ with tab2:
         if selected_projects:
             df = df[df["Project"].str.upper().isin(selected_projects)]
 
-        # Create a separate DataFrame for display (no ID)
+        # Create display DataFrame (hide internal ID)
         df_display = df[["Date of Message", "Message", "Project", "Action", "Deadline", "Status", "Select"]].copy()
-
-        # Keep ID separately for logic
-        df_display["internal_id"] = df["id"]
+        id_map = df["id"].tolist()  # Keep ID separately for logic
 
         # Editable table
         edited_df = st.data_editor(
@@ -289,16 +287,17 @@ with tab2:
         )
 
         # Update session state with edits
-        for _, row in edited_df.iterrows():
+        for i, row in edited_df.iterrows():
+            task_id = id_map[i]
             for task in st.session_state.escalated_tasks:
-                if task["id"] == row["internal_id"]:
+                if task["id"] == task_id:
                     task["status"] = row["Status"].split(" ", 1)[-1]
                     task["project"] = row["Project"]
                     task["action"] = row["Action"]
 
         # Delete selected rows when button is clicked
         if st.button("🗑️ Delete Selected"):
-            selected_ids = edited_df[edited_df["Select"] == True]["internal_id"].tolist()
+            selected_ids = [id_map[i] for i, row in edited_df.iterrows() if row["Select"]]
             st.session_state.deleted_ids.update(selected_ids)
 
             st.session_state.escalated_tasks = [
