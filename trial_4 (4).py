@@ -45,6 +45,12 @@ def correct_weekdays(text):
         text = re.sub(rf"\b{wrong}\b", right, text, flags=re.IGNORECASE)
     return text
 
+def correct_year_if_needed(parsed_date, reference_date):
+    # If the parsed date is more than 1 year in the future, assume it's a misinterpretation
+    if parsed_date.year > reference_date.year + 1:
+        return parsed_date.replace(year=reference_date.year)
+    return parsed_date
+
 def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
 
