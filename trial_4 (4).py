@@ -47,6 +47,7 @@ def correct_weekdays(text):
 
 def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
+    current_year = reference_date.year
 
     # Step 1: Handle "next week"
     if re.search(r'\bnext\s+week\b', corrected_message, re.IGNORECASE):
@@ -88,6 +89,10 @@ def extract_deadline_from_message(message, reference_date):
     )
 
     for phrase in deadline_phrases:
+        # Add current year if only day/month is provided
+        if re.match(r'^\d{1,2}[/-]\d{1,2}$', phrase):
+            phrase += f'/{current_year}'
+
         parsed = dateparser.parse(
             phrase,
             settings={
@@ -101,6 +106,7 @@ def extract_deadline_from_message(message, reference_date):
             return parsed
 
     return None
+
 
     '''
     # Match various date formats and relative phrases
