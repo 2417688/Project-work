@@ -52,7 +52,15 @@ def extract_deadline_from_message(message, reference_date, debug=False):
         st.markdown("### 🐞 Debugging Deadline Extraction")
         st.write("**Corrected Message:**", corrected_message)
 
-    # Step 0: Check for ISO format (YYYY-MM-DD)
+    # Step 0: Handle vague phrases like "before the weekend"
+    if re.search(r'\bbefore\s+the\s+weekend\b', corrected_message, re.IGNORECASE):
+        days_until_friday = (4 - reference_date.weekday()) % 7
+        deadline = reference_date + datetime.timedelta(days=days_until_friday)
+        if debug:
+            st.write("Matched phrase: 'before the weekend' →", deadline)
+        return deadline
+
+    # Step 1: Check for ISO format (YYYY-MM-DD)
     iso_match = re.search(r'\b(\d{4}-\d{2}-\d{2})\b', corrected_message)
     if iso_match:
         try:
@@ -65,7 +73,7 @@ def extract_deadline_from_message(message, reference_date, debug=False):
             if debug:
                 st.write("Error parsing ISO date:", e)
 
-    # Step 1: Handle "next week"
+    # Step 2: Handle "next week"
     if re.search(r'\bnext\s+week\b', corrected_message, re.IGNORECASE):
         days_until_next_monday = (7 - reference_date.weekday()) % 7 + 7
         deadline = reference_date + datetime.timedelta(days=days_until_next_monday)
@@ -73,7 +81,7 @@ def extract_deadline_from_message(message, reference_date, debug=False):
             st.write("Matched phrase: 'next week' →", deadline)
         return deadline
 
-    # Step 2: Handle "next month"
+    # Step 3: Handle "next month"
     if re.search(r'\bnext\s+month\b', corrected_message, re.IGNORECASE):
         year = reference_date.year
         month = reference_date.month + 1
@@ -85,7 +93,7 @@ def extract_deadline_from_message(message, reference_date, debug=False):
             st.write("Matched phrase: 'next month' →", deadline)
         return deadline
 
-    # Step 3: Handle "next [weekday]"
+    # Step 4: Handle "next [weekday]"
     weekday_match = re.search(r'\bnext\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b', corrected_message, re.IGNORECASE)
     if weekday_match:
         weekday_str = weekday_match.group(1).lower()
@@ -96,7 +104,7 @@ def extract_deadline_from_message(message, reference_date, debug=False):
             st.write(f"Matched phrase: 'next {weekday_str}' →", deadline)
         return deadline
 
-    # Step 4: Handle "this [weekday]"
+    # Step 5: Handle "this [weekday]"
     this_weekday_match = re.search(r'\bthis\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b', corrected_message, re.IGNORECASE)
     if this_weekday_match:
         weekday_str = this_weekday_match.group(1).lower()
@@ -107,7 +115,7 @@ def extract_deadline_from_message(message, reference_date, debug=False):
             st.write(f"Matched phrase: 'this {weekday_str}' →", deadline)
         return deadline
 
-    # Step 5: Regex-based date phrase matching
+    # Step 6: Regex-based date phrase matching
     deadline_phrases = re.findall(
         r'\b(?:by|for|on|due)?\s*('
         r'\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|'             # 08/07 or 08/07/2025
@@ -144,7 +152,7 @@ def extract_deadline_from_message(message, reference_date, debug=False):
             if debug:
                 st.write(f"Error parsing phrase '{phrase}':", e)
 
-    # Step 6: Use search_dates as fallback
+    # Step 7: Use search_dates as fallback
     found_dates = search_dates(
         corrected_message,
         settings={
