@@ -108,12 +108,12 @@ def extract_deadline_from_message(message, reference_date, debug=False):
         st.write("**Found Dates:**", found_dates)
 
     if found_dates:
-        future_dates = [dt for _, dt in found_dates if dt > reference_date]
-        if future_dates:
-            selected = min(future_dates)
+        first_text, first_date = found_dates[0]
+        if first_date > reference_date:
             if debug:
-                st.write("**Selected Deadline:**", selected)
-            return selected
+                st.write("**First Found Date:**", first_text, "→", first_date)
+            return first_date  
+
 
     if debug:
         st.write("❌ No valid future deadline found.")
