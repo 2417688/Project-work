@@ -39,7 +39,7 @@ def rule_based_urgency(message_date, deadline=None):
       return 0.5
     else:
       return 0.25
-    return 0.0
+return 0.0
 
 # Rule-based flags for urgency keywords
 def rule_based_flags(message):
@@ -48,7 +48,7 @@ def rule_based_flags(message):
   for word in keywords:
     if re.search(rf'\b{word}\b', message, re.IGNORECASE):
       score += 0.3 # Increased weight per keyword
-    return min(score, 1.0)
+return min(score, 1.0)
 
 # Deadline Extraction (including relative dates)
 def extract_deadline_from_message(message, reference_date):
