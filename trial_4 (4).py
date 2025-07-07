@@ -107,8 +107,6 @@ def extract_deadline_from_message(message, reference_date):
 
     return None
     '''
-
-
     # Match various date formats and relative phrases
     deadline_phrases = re.findall(
         r'\b(?:by|for|on|due)?\s*('
