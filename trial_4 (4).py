@@ -40,16 +40,21 @@ WEEKDAY_CORRECTIONS = {
     "wednsday": "wednesday"
 }
 
-# Function to correct weekday spelling
 def correct_weekdays(text):
-  for wrong, right in WEEKDAY_CORRECTIONS.items():
-    text = re.sub(rf"\b{wrong}\b", right, text, flags=re.IGNORECASE)
-  return text
+    for wrong, right in WEEKDAY_CORRECTIONS.items():
+        text = re.sub(rf"\b{wrong}\b", right, text, flags=re.IGNORECASE)
+    return text
 
-# Extract deadline from message using dateparser and corrected weekdays
-def extract_deadline_from_message(message, reference_date):
-    corrected_message = correct_weekdays(message)
-    current_year = reference_date.year
+def adjust_next_weekday(parsed_date, phrase):
+    if "next" in phrase.lower():
+        return parsed_date + datetime.timedelta(days=7)
+    return parsed_date
+
+def correct_year_if_needed(parsed_date, reference_date):
+    # If the parsed date is more than 1 year in the future, assume it's a misinterpretation
+    if parsed_date.year > reference_date.year + 1:
+        return parsed_date.replace(year=reference_date.year)
+    return parsed_date
 
 def extract_deadline_from_message(message, reference_date):
     corrected_message = correct_weekdays(message)
@@ -65,9 +70,10 @@ def extract_deadline_from_message(message, reference_date):
     )
 
     if results:
-        # Return the first valid date found
-        for _, parsed_date in results:
+        for phrase, parsed_date in results:
             if parsed_date:
+                parsed_date = correct_year_if_needed(parsed_date, reference_date)
+                parsed_date = adjust_next_weekday(parsed_date, phrase)
                 return parsed_date
 
     return None
