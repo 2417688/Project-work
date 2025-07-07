@@ -70,11 +70,10 @@ def extract_deadline_from_message(message, reference_date):
     return None
 
 # Simulated fine-tuned BERT model output
-def simulate_bert_scores(message):
-  # Placeholder for actual model inference
-  urgency_score = random.uniform(0.3, 1.0)
-  importance_score = random.uniform(0.3, 1.0)
-  return urgency_score, importance_score
+def simulate_llm_scores(message):
+    urgency_score = random.uniform(0.3, 1.0)
+    importance_score = random.uniform(0.3, 1.0)
+    return urgency_score, importance_score
 
 # Rule-based urgency score based on deadline proximity
 def rule_based_urgency(message_date, deadline=None):
