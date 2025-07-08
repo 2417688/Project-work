@@ -21,7 +21,6 @@ from dateparser.search import search_dates
 from pathlib import Path
 import json
 
-
 def load_tasks():
     try:
         if Path("tasks.json").exists():
@@ -34,7 +33,6 @@ def load_tasks():
         st.warning("⚠️ The task file is corrupted or unreadable. Starting with an empty task list.")
         return []
     return []
-
 
 def save_tasks(tasks):
     with open("tasks.json", "w") as f:
