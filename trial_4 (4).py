@@ -347,7 +347,7 @@ with tab2:
 
         # Format and rename columns
         df["Date of Message"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
-        df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.date
+        df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%d/%m/%Y")
 
         def status_emoji(status):
             return {
@@ -395,7 +395,7 @@ with tab2:
                 "Status": st.column_config.SelectboxColumn("Status", options=["🔴 Not Started", "🟡 In Progress", "🟢 Completed"]),
                 "Project": st.column_config.TextColumn("Project"),
                 "Action": st.column_config.TextColumn("Action"),
-                "Deadline": st.column_config.DateColumn("Deadline"),
+                "Deadline": st.column_config.TextColumn("Deadline"),  # Editable as dd/mm/yyyy
                 "Select": st.column_config.CheckboxColumn("Select")
             },
             disabled=["Date of Message", "Message"],
@@ -404,6 +404,8 @@ with tab2:
         )
 
         # Update session state with edits
+        from datetime import datetime
+
         for i in range(len(edited_df)):
             row = edited_df.iloc[i]
             if i >= len(id_map):
@@ -414,7 +416,10 @@ with tab2:
                     task["status"] = row["Status"].split(" ", 1)[-1]
                     task["project"] = row["Project"]
                     task["action"] = row["Action"]
-                    task["deadline"] = str(row["Deadline"])  # Save as string for consistency
+                    try:
+                        task["deadline"] = datetime.strptime(row["Deadline"], "%d/%m/%Y").date()
+                    except:
+                        task["deadline"] = row["Deadline"]  # fallback if parsing fails
 
         # Delete selected rows
         if st.button("🗑️ Delete Selected"):
@@ -426,5 +431,3 @@ with tab2:
                 if task["id"] not in st.session_state.deleted_ids
             ]
             st.rerun()
-
-
