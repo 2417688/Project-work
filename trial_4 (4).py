@@ -375,7 +375,7 @@ with tab2:
             df = df[df["Status"].str.contains(status_filter, case=False)]
 
         # Select All checkbox
-        select_all = st.checkbox("✅ Select All")
+        select_all = st.checkbox("✅ Select All") 
 
         # Rebuild ID map after filtering
         id_map = df["id"].tolist()
