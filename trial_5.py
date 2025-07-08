@@ -520,9 +520,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Create tabs with clearer names
-tab1, tab2 = st.tabs(["📊 Urgency Calculator", "📋 Dashboard"])
-
 if st.session_state.role == "team_member":
     tab1, tab2, tab3 = st.tabs(["📊 Urgency Calculator", "📋 Dashboard", "📈 Progress Insights"])
 
