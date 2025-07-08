@@ -216,7 +216,6 @@ def generate_response(urgency, importance, escalate):
     else:
         return "✅ This message does not require immediate attention. You can monitor it for now."
 
-# Analyze a message and return structured result
 def analyze_message(message, message_date):
     deadline = extract_deadline_from_message(message, message_date)
     urgency_rule_score = rule_based_urgency(message_date, deadline)
@@ -236,15 +235,16 @@ def analyze_message(message, message_date):
     return {
         "id": str(uuid.uuid4()),
         "user": st.session_state.username,
-        "date_sent": message_date,
+        "date_sent": message_date.strftime("%Y-%m-%d"),  # Convert to string for JSON
         "message": message,
-        "deadline": deadline,
-        "project": "",  # To be edited by user later
+        "deadline": deadline.strftime("%Y-%m-%d") if deadline else None,  # Convert to string if exists
+        "project": "",
         "action": "",
         "status": "Not Started",
         "escalate": escalate,
         "response": response
     }
+
 
 # --- USER DATABASE ---
 USERS = {
