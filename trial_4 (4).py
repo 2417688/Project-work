@@ -347,7 +347,7 @@ with tab2:
 
         # Format and rename columns
         df["Date of Message"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
-        df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%d/%m/%Y")
+        df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.date
 
         def status_emoji(status):
             return {
@@ -375,7 +375,7 @@ with tab2:
             df = df[df["Status"].str.contains(status_filter, case=False)]
 
         # Select All checkbox
-        select_all = st.checkbox("✅ Select All") 
+        select_all = st.checkbox("✅ Select All")
 
         # Rebuild ID map after filtering
         id_map = df["id"].tolist()
@@ -395,9 +395,10 @@ with tab2:
                 "Status": st.column_config.SelectboxColumn("Status", options=["🔴 Not Started", "🟡 In Progress", "🟢 Completed"]),
                 "Project": st.column_config.TextColumn("Project"),
                 "Action": st.column_config.TextColumn("Action"),
+                "Deadline": st.column_config.DateColumn("Deadline"),
                 "Select": st.column_config.CheckboxColumn("Select")
             },
-            disabled=["Date of Message", "Deadline", "Message"],
+            disabled=["Date of Message", "Message"],
             hide_index=True,
             key="dashboard_editor"
         )
@@ -413,6 +414,7 @@ with tab2:
                     task["status"] = row["Status"].split(" ", 1)[-1]
                     task["project"] = row["Project"]
                     task["action"] = row["Action"]
+                    task["deadline"] = str(row["Deadline"])  # Save as string for consistency
 
         # Delete selected rows
         if st.button("🗑️ Delete Selected"):
@@ -424,4 +426,5 @@ with tab2:
                 if task["id"] not in st.session_state.deleted_ids
             ]
             st.rerun()
+
 
