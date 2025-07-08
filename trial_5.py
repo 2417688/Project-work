@@ -267,7 +267,7 @@ def login():
             st.session_state.username = username
             st.session_state.role = user["role"]
             st.success(f"Welcome, {username.capitalize()}!")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Invalid username or password.")
 
@@ -387,7 +387,7 @@ def dashboard_tab():
         tasks = [task for task in tasks if task["id"] not in selected_ids]
         save_tasks(tasks)
         st.success("Selected tasks deleted.")
-        st.experimental_rerun()
+        st.rerun()
 
 #-------TAB 3-----------
 def progress_insights_tab():
