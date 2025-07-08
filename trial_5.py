@@ -113,6 +113,19 @@ def extract_deadline_from_message(message, reference_date):
         days_ahead = (weekday_index - reference_date.weekday()) % 7
         return reference_date + datetime.timedelta(days=days_ahead)
 
+    # Handle "this week"
+    if re.search(r'\bthis\s+week\b', corrected_message, re.IGNORECASE):
+        # Return the end of the current week (Sunday)
+        days_until_sunday = 6 - reference_date.weekday()
+        return reference_date + datetime.timedelta(days=days_until_sunday)
+    
+    # Handle "this month"
+    if re.search(r'\bthis\s+month\b', corrected_message, re.IGNORECASE):
+        # Return the last day of the current month
+        next_month = reference_date.replace(day=28) + datetime.timedelta(days=4)  # always goes to next month
+        last_day = next_month - datetime.timedelta(days=next_month.day)
+        return last_day
+
     # Step 6: Regex-based date phrase matching
     deadline_phrases = re.findall(
         r'\b(?:by|for|on|due)?\s*('
@@ -417,9 +430,11 @@ def progress_insights_tab():
         if task["status"].lower() == "completed":
             leaderboard_data[user] = leaderboard_data.get(user, 0) + 1
     leaderboard_df = pd.DataFrame(list(leaderboard_data.items()), columns=["User", "Completed Tasks"])
+    leaderboard_df["User"] = leaderboard_df["User"].str.capitalize()
     leaderboard_df = leaderboard_df.sort_values(by="Completed Tasks", ascending=False).reset_index(drop=True)
+    leaderboard_df.index = leaderboard_df.index + 1 # Start index at 1
     st.subheader("🏆 Leaderboard")
-    st.dataframe(leaderboard_df, use_container_width=True)
+    st.table(leaderboard_df) # Not sortable
 
     # Doughnut chart filters
     st.subheader("📊 Task Status Distribution")
@@ -462,12 +477,19 @@ def team_dashboard_tab():
 
     team_members = sorted(set(task["user"] for task in tasks))
     summary = []
+    today = datetime.date.today()
+    start_of_week = today - datetime.timedelta(days=today.weekday())
+
     for member in team_members:
         member_tasks = [task for task in tasks if task["user"] == member]
-        this_week = [task for task in member_tasks if "date_sent" in task and datetime.datetime.strptime(task["date_sent"], "%Y-%m-%d").date() >= datetime.date.today() - datetime.timedelta(days=datetime.date.today().weekday())]
+        this_week = [
+            task for task in member_tasks
+            if "date_sent" in task and datetime.datetime.strptime(task["date_sent"], "%Y-%m-%d").date() >= start_of_week
+        ]
         not_started = sum(1 for task in this_week if task["status"].lower() == "not started")
         completed = sum(1 for task in this_week if task["status"].lower() == "completed")
         total = len(this_week)
+
         if total == 0:
             progress = "No Tasks This Week"
         elif not_started > total / 2:
@@ -478,9 +500,9 @@ def team_dashboard_tab():
             progress = "On Track"
 
         recommendation = {
-            "Falling Behind": "📩 Reach out to offer support.",
-            "On Track": "✅ Keep up the good work.",
-            "Efficient": "🎉 Consider giving praise.",
+            "Falling Behind": "Reach out to offer support.",
+            "On Track": "Keep up the good work.",
+            "Efficient": "Consider giving praise.",
             "No Tasks This Week": "No recent activity."
         }.get(progress, "")
 
@@ -490,9 +512,14 @@ def team_dashboard_tab():
             "Recommendation": recommendation
         })
 
-    st.subheader("📋 Team Progress Overview")
-    st.dataframe(pd.DataFrame(summary), use_container_width=True)
+    summary_df = pd.DataFrame(summary)
+    summary_df.reset_index(drop=True, inplace=True)
+    summary_df.index = summary_df.index + 1  # Start index at 1
 
+    st.subheader("📋 Team Progress Overview")
+    st.dataframe(summary_df, use_container_width=True)
+
+    # Task status distribution chart
     st.subheader("📊 Task Status Distribution by Team Member")
     project_options = sorted(set(task["project"] for task in tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options)
@@ -503,7 +530,6 @@ def team_dashboard_tab():
     if selected_projects:
         filtered_tasks = [task for task in filtered_tasks if task["project"] in selected_projects]
 
-    today = datetime.date.today()
     if period == "This Week":
         start = today - datetime.timedelta(days=today.weekday())
         filtered_tasks = [task for task in filtered_tasks if "date_sent" in task and datetime.datetime.strptime(task["date_sent"], "%Y-%m-%d").date() >= start]
@@ -516,7 +542,15 @@ def team_dashboard_tab():
 
     if filtered_tasks:
         df = pd.DataFrame(filtered_tasks)
-        fig = px.histogram(df, x="user", color="status", barmode="group", title="Task Status by Team Member", labels={"user": "Team Member", "status": "Task Status"})
+        df["user"] = df["user"].str.capitalize()
+        fig = px.histogram(
+            df,
+            x="user",
+            color="status",
+            barmode="group",
+            title="Task Status by Team Member",
+            labels={"user": "Team Member", "status": "Task Status"}
+        )
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("No tasks match the selected filters for the chart.")
