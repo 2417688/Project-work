@@ -13,6 +13,7 @@ import re
 import datetime
 import random
 import pandas as pd
+import plotly.express as px
 import dateparser
 import streamlit as st
 import os
