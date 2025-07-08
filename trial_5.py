@@ -22,17 +22,17 @@ from pathlib import Path
 import json
 
 def load_tasks():
-    try:
-        if Path("tasks.json").exists():
-            with open("tasks.json", "r") as f:
-                content = f.read().strip()
-                if not content:
-                    return []
-                return json.loads(content)
-    except json.JSONDecodeError:
-        st.warning("⚠️ The task file is corrupted or unreadable. Starting with an empty task list.")
-        return []
-    return []
+    try:
+        if Path("tasks.json").exists():
+            with open("tasks.json", "r") as f:
+                content = f.read().strip()
+                if not content:
+                    return []
+                return json.loads(content)
+    except json.JSONDecodeError:
+        st.warning("⚠️ The task file is corrupted or unreadable. Starting with an empty task list.")
+        return []
+    return []
 
 def save_tasks(tasks):
     with open("tasks.json", "w") as f:
