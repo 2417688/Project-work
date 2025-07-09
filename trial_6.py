@@ -394,6 +394,11 @@ def overview_tab():
         st.info("No tasks to display.")
         return
 
+    # Ensure required columns exist
+    for col in ["tone", "sentiment", "select"]:
+        if col not in df.columns:
+            df[col] = "" if col in ["tone", "sentiment"] else False
+
     df["Date Sent"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
     df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%Y-%m-%d")
 
@@ -404,15 +409,9 @@ def overview_tab():
     ]].copy()
 
     df_display.rename(columns={
-        "message": "Message",
-        "project": "Project",
-        "urgency": "Urgency",
-        "importance": "Importance",
-        "tone": "Tone",
-        "sentiment": "Sentiment",
-        "priority_level": "Priority Level",
-        "Deadline": "Deadline",
-        "select": "Select"
+        "message": "Message", "project": "Project", "urgency": "Urgency", "importance": "Importance",
+        "tone": "Tone", "sentiment": "Sentiment", "priority_level": "Priority Level",
+        "Deadline": "Deadline", "select": "Select"
     }, inplace=True)
 
     edited_df = st.data_editor(
@@ -453,6 +452,12 @@ def dashboard_tab():
         return
 
     df = pd.DataFrame(high_priority_tasks)
+
+    # Ensure required columns exist
+    for col in ["tone", "sentiment", "select"]:
+        if col not in df.columns:
+            df[col] = "" if col in ["tone", "sentiment"] else False
+
     df["Date Sent"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
     df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%Y-%m-%d")
 
@@ -461,22 +466,25 @@ def dashboard_tab():
     ]].copy()
 
     df_display.rename(columns={
-        "message": "Message",
-        "project": "Project",
-        "priority_level": "Priority Level",
-        "Deadline": "Deadline",
-        "select": "Select"
+        "message": "Message", "project": "Project", "priority_level": "Priority Level",
+        "Deadline": "Deadline", "select": "Select"
     }, inplace=True)
 
-    st.dataframe(
-        df_display.style.set_properties(subset=["Message"], **{"width": "150px"}),
-        use_container_width=True
+    edited_df = st.data_editor(
+        df_display,
+        use_container_width=True,
+        column_config={
+            "Message": st.column_config.TextColumn("Message", width="small"),
+            "Select": st.column_config.CheckboxColumn("Select")
+        },
+        disabled=["Date Sent", "Message", "Project", "Priority Level", "Deadline"],
+        hide_index=True,
+        key="dashboard_editor"
     )
 
-    delete_index = st.selectbox("Select a task to delete", options=list(range(len(high_priority_tasks))), format_func=lambda i: f"{df_display.iloc[i]['Message'][:30]}...")
-    if st.button("Delete Selected High Priority Task"):
-        original_index = [i for i, task in enumerate(tasks) if task.get("priority_level") == "🚨 High"][delete_index]
-        del tasks[original_index]
+    if st.button("Delete Selected High Priority Tasks"):
+        original_indices = [i for i, task in enumerate(tasks) if task.get("priority_level") == "🚨 High"]
+        tasks = [task for i, task in enumerate(tasks) if i not in [original_indices[j] for j in range(len(edited_df)) if edited_df.iloc[j]["Select"]]]
         save_tasks(tasks)
         st.rerun()
 
