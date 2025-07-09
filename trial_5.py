@@ -326,7 +326,7 @@ def urgency_calculator_tab():
             save_tasks(tasks)
             st.success("✅ Task added to dashboard.")
 
-#-------TAB 2---------
+#--------TAB 2--------
 def dashboard_tab():
     st.header("📋 Escalated Tasks Dashboard")
 
@@ -354,13 +354,12 @@ def dashboard_tab():
     df["Message"] = df["message"]
     df["Select"] = False
 
-    project_options_raw = df["Project"].dropna().unique().tolist()
-    project_options_display = sorted(set([p.upper() for p in project_options_raw]))
-    selected_projects = st.multiselect("🔍 Filter by project(s):", options=project_options_display)
+    project_options_raw = df["Project"].dropna().str.title().unique().tolist()
+    selected_projects = st.multiselect("Filter by project:", options=sorted(project_options_raw))
     if selected_projects:
-        df = df[df["Project"].str.upper().isin(selected_projects)]
+        df = df[df["Project"].str.title().isin(selected_projects)]
 
-    status_filter = st.selectbox("📌 Filter by status:", options=["All", "Not Started", "In Progress", "Completed"])
+    status_filter = st.selectbox("Filter by status:", options=["All", "Not Started", "In Progress", "Completed"])
     if status_filter != "All":
         df = df[df["Status"].str.contains(status_filter, case=False)]
 
@@ -410,20 +409,23 @@ def dashboard_tab():
         st.success("Selected tasks deleted.")
         st.rerun()
 
-#-------TAB 3-----------
+
+#-------TAB 3---------
 def progress_insights_tab():
     st.header("📈 Progress Insights")
 
     tasks = load_tasks()
-    if not tasks:
+    user_tasks = [task for task in tasks if task["user"] == st.session_state.username]
+
+    if not user_tasks:
         st.info("No tasks available.")
         return
 
-    # Completed task counter (unfiltered)
-    completed_count = sum(1 for task in tasks if task["status"].lower() == "completed")
+    # Completed task counter (user-specific)
+    completed_count = sum(1 for task in user_tasks if task["status"].lower() == "completed")
     st.metric("✅ Completed Tasks", completed_count)
 
-    # Leaderboard (unfiltered)
+    # Leaderboard (optional: still shows all users)
     leaderboard_data = {}
     for task in tasks:
         user = task.get("user", "Unknown")
@@ -432,20 +434,20 @@ def progress_insights_tab():
     leaderboard_df = pd.DataFrame(list(leaderboard_data.items()), columns=["User", "Completed Tasks"])
     leaderboard_df["User"] = leaderboard_df["User"].str.capitalize()
     leaderboard_df = leaderboard_df.sort_values(by="Completed Tasks", ascending=False).reset_index(drop=True)
-    leaderboard_df.index = leaderboard_df.index + 1 # Start index at 1
+    leaderboard_df.index = leaderboard_df.index + 1
     st.subheader("🏆 Leaderboard")
-    st.table(leaderboard_df) # Not sortable
+    st.table(leaderboard_df)
 
     # Doughnut chart filters
     st.subheader("📊 Task Status Distribution")
-    project_options = sorted(set(task["project"] for task in tasks if task["project"]))
-    selected_projects = st.multiselect("Filter doughnut chart by project:", options=project_options)
+    project_options = sorted(set(task["project"].title() for task in user_tasks if task["project"]))
+    selected_projects = st.multiselect("Filter by project:", options=project_options)
 
-    period = st.selectbox("Filter doughnut chart by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"])
-    filtered_tasks = tasks
+    period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"])
+    filtered_tasks = user_tasks
 
     if selected_projects:
-        filtered_tasks = [task for task in filtered_tasks if task["project"] in selected_projects]
+        filtered_tasks = [task for task in filtered_tasks if task["project"].title() in selected_projects]
 
     today = datetime.date.today()
     if period == "This Week":
@@ -461,12 +463,24 @@ def progress_insights_tab():
     if filtered_tasks:
         status_counts = pd.Series([task["status"] for task in filtered_tasks]).value_counts().reset_index()
         status_counts.columns = ["Status", "Count"]
-        fig = px.pie(status_counts, names="Status", values="Count", title="Task Status Distribution", hole=0.4)
+        fig = px.pie(
+            status_counts,
+            names="Status",
+            values="Count",
+            title="Task Status Distribution",
+            hole=0.4,
+            color="Status",
+            color_discrete_map={
+                "Not Started": "#f8d7da",   # pale red
+                "In Progress": "#fff3cd",  # pale yellow
+                "Completed": "#d4edda"     # pale green
+            }
+        )
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("No tasks match the selected filters for the doughnut chart.")
 
-#---------TAB 4-----------
+#-------TAB 4---------
 def team_dashboard_tab():
     st.header("👥 Team Dashboard")
 
@@ -475,7 +489,8 @@ def team_dashboard_tab():
         st.info("No tasks available.")
         return
 
-    team_members = sorted(set(task["user"] for task in tasks))
+    # Exclude manager from team dashboard
+    team_members = sorted(set(task["user"] for task in tasks if USERS.get(task["user"], {}).get("role") == "team_member"))
     summary = []
     today = datetime.date.today()
     start_of_week = today - datetime.timedelta(days=today.weekday())
@@ -500,10 +515,10 @@ def team_dashboard_tab():
             progress = "On Track"
 
         recommendation = {
-            "Falling Behind": "Reach out to offer support.",
-            "On Track": "Keep up the good work.",
-            "Efficient": "Consider giving praise.",
-            "No Tasks This Week": "No recent activity."
+            "Falling Behind": "Offer support.",
+            "On Track": "Monitor progress.",
+            "Efficient": "Note good performance.",
+            "No Tasks This Week": "Check in for updates."
         }.get(progress, "")
 
         summary.append({
@@ -514,21 +529,31 @@ def team_dashboard_tab():
 
     summary_df = pd.DataFrame(summary)
     summary_df.reset_index(drop=True, inplace=True)
-    summary_df.index = summary_df.index + 1  # Start index at 1
+    summary_df.index = summary_df.index + 1
+
+    # Apply row color styling
+    def highlight_progress(row):
+        color_map = {
+            "Falling Behind": "background-color: #f8d7da",  # pale red
+            "On Track": "background-color: #d1ecf1",        # pale blue
+            "Efficient": "background-color: #d4edda",       # pale green
+            "No Tasks This Week": "background-color: #fefefe"
+        }
+        return [color_map.get(row["Progress"], "")] * len(row)
 
     st.subheader("📋 Team Progress Overview")
-    st.dataframe(summary_df, use_container_width=True)
+    st.dataframe(summary_df.style.apply(highlight_progress, axis=1), use_container_width=True)
 
     # Task status distribution chart
     st.subheader("📊 Task Status Distribution by Team Member")
-    project_options = sorted(set(task["project"] for task in tasks if task["project"]))
+    project_options = sorted(set(task["project"].title() for task in tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options)
 
     period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"])
-    filtered_tasks = tasks
+    filtered_tasks = [task for task in tasks if task["user"] in team_members]
 
     if selected_projects:
-        filtered_tasks = [task for task in filtered_tasks if task["project"] in selected_projects]
+        filtered_tasks = [task for task in filtered_tasks if task["project"].title() in selected_projects]
 
     if period == "This Week":
         start = today - datetime.timedelta(days=today.weekday())
@@ -547,9 +572,14 @@ def team_dashboard_tab():
             df,
             x="user",
             color="status",
-            barmode="group",
+            barmode="stack",
             title="Task Status by Team Member",
-            labels={"user": "Team Member", "status": "Task Status"}
+            labels={"user": "Team Member", "status": "Task Status"},
+            color_discrete_map={
+                "Not Started": "#f8d7da",   # pale red
+                "In Progress": "#fff3cd",  # pale yellow
+                "Completed": "#d4edda"     # pale green
+            }
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
@@ -562,6 +592,16 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+# Add logout button to sidebar
+with st.sidebar:
+    st.markdown("### 🔐 Session")
+    if st.button("Logout"):
+        st.session_state.logged_in = False
+        st.session_state.username = ""
+        st.session_state.role = ""
+        st.rerun()
+
+# Display tabs based on role
 if st.session_state.role == "team_member":
     tab1, tab2, tab3 = st.tabs(["📊 Urgency Calculator", "📋 Dashboard", "📈 Progress Insights"])
 
@@ -593,3 +633,4 @@ elif st.session_state.role == "manager":
 
     with tab4:
         team_dashboard_tab()
+
