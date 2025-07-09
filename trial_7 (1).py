@@ -386,11 +386,11 @@ def overview_tab():
 
     # Filters
     project_options = df["Project"].dropna().str.upper().unique().tolist()
-    selected_projects = st.multiselect("Filter by project:", options=sorted(project_options))
+    selected_projects = st.multiselect("Filter by project:", options=sorted(project_options), key="overview_project_filter")
     if selected_projects:
         df = df[df["Project"].str.upper().isin(selected_projects)]
 
-    priority_filter = st.selectbox("Filter by priority:", options=["All", "🚨 High", "⚠️ Moderate", "🟢 Low"])
+    priority_filter = st.selectbox("Filter by priority:", options=["All", "🚨 High", "⚠️ Moderate", "🟢 Low"], key="overview_priority_filter")
     if priority_filter != "All":
         df = df[df["Priority"] == priority_filter]
 
@@ -460,13 +460,17 @@ def dashboard_tab():
     df["Select"] = False
 
     project_options_raw = df["Project"].dropna().str.upper().unique().tolist()
-    selected_projects = st.multiselect("Filter by project:", options=sorted(project_options_raw))
+    selected_projects = st.multiselect(
+    "Filter by project:",
+    options=sorted(project_options_raw),
+    key="dashboard_project_filter"
+)
     if selected_projects:
         df = df[df["Project"].str.upper().isin(selected_projects)]
 
     status_filter = st.selectbox("Filter by status:", options=["All", "Not Started", "In Progress", "Completed"])
     if status_filter != "All":
-        df = df[df["Status"].str.contains(status_filter, case=False)]
+        df = df[df["Status"].str.contains(status_filter, case=False), key="dashboard_status_filter"]
 
     select_all = st.checkbox("✅ Select All")
     if select_all:
