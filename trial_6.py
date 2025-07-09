@@ -270,6 +270,15 @@ def combine_scores(
     combined_urgency = normalized_rule_weight * rule_total + normalized_llm_weight * urgency_llm_score
     return min(combined_urgency, 1.0), importance_llm_score
 
+# RESPONSES - HARD CODED + LLM ACTION (e.g. This has been added to your Escalation Tab. ("LLM action"))
+def generate_response(urgency, importance, escalate):
+    if escalate:
+        return "🚨 This message appears to be both urgent and important. Recommended action: escalate to your project lead or take immediate steps to address the issue."
+    elif urgency > 0.5 or importance > 0.5:
+        return "⚠️ This message has moderate urgency or importance. You may want to review it soon and follow up if needed."
+    else:
+        return "✅ This message does not require immediate attention. You can monitor it for now."
+
 # ANALYSIS AND ESCALATION LOGIC
 def analyze_message(message, message_date):
     deadline = extract_deadline_from_message(message, message_date)
