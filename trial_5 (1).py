@@ -545,7 +545,7 @@ def team_dashboard_tab():
     # Task status distribution chart
     st.subheader("📊 Task Status Distribution by Team Member")
     project_options = sorted(set(task["project"].title() for task in tasks if task["project"]))
-    selected_projects = st.multiselect("Filter by project:", options=project_options, key="progress_project_filter")
+    selected_projects = st.multiselect("Filter by project:", options=project_options, key="team_project_filter")
 
     period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"])
     filtered_tasks = [task for task in tasks if task["user"] in team_members]
