@@ -402,7 +402,7 @@ def overview_tab():
     df["Date Sent"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
     df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%Y-%m-%d")
 
-    editable_cols = ["project", "priority_level", "Deadline", "select"]
+    editable_cols = ["project", "priority_level", "select"]
     df_display = df[[
         "Date Sent", "message", "project", "urgency", "importance",
         "tone", "sentiment", "priority_level", "Deadline", "select"
@@ -487,6 +487,7 @@ def dashboard_tab():
         tasks = [task for i, task in enumerate(tasks) if i not in [original_indices[j] for j in range(len(edited_df)) if edited_df.iloc[j]["Select"]]]
         save_tasks(tasks)
         st.rerun()
+
 
 #-------TAB 4---------
 def progress_insights_tab():
