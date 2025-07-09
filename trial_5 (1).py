@@ -325,6 +325,7 @@ def urgency_calculator_tab():
             save_tasks(tasks)
             st.success("✅ Task added to dashboard.")
 
+#------TAB 2-------
 def dashboard_tab():
     st.header("📋 Escalated Tasks Dashboard")
 
@@ -353,7 +354,7 @@ def dashboard_tab():
     df["Select"] = False
 
     project_options_raw = df["Project"].dropna().str.title().unique().tolist()
-    selected_projects = st.multiselect("Filter by project:", options=sorted(project_options_raw))
+    selected_projects = st.multiselect("Filter by project:", options=sorted(project_options_raw), key="dashboard_project_filter")
     if selected_projects:
         df = df[df["Project"].str.title().isin(selected_projects)]
 
@@ -439,7 +440,6 @@ def progress_insights_tab():
     st.subheader("📊 Task Status Distribution")
     project_options = sorted(set(task["project"].title() for task in user_tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options, key="progress_project_filter")
-
 
     period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"])
     filtered_tasks = user_tasks
