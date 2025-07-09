@@ -667,10 +667,10 @@ with st.sidebar:
 # UI WITH USER LOGIC
 # Display tabs based on role
 if st.session_state.role == "team_member":
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Urgency Calculator", "📋 Overview", "🚨 High Priority Tasks", "📈 Progress Insights"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🎯 Priority Calculator", "📋 Overview", "🚨 High Priority Tasks", "📈 Progress Insights"])
 
     with tab1:
-        urgency_calculator_tab()
+        priority_calculator_tab()
     with tab2:
         overview_tab()
     with tab3:
@@ -682,14 +682,14 @@ if st.session_state.role == "team_member":
 
 elif st.session_state.role == "manager":
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📊 Urgency Calculator",
+    "🎯 Priority Calculator",
     "📋 Overview",
     "🚨 High Priority Tasks",
     "📈 Progress Insights",
     "👥 Team Dashboard"])
 
     with tab1:
-        urgency_calculator_tab()
+        priority_calculator_tab()
     with tab2:
         overview_tab()
     with tab3:
