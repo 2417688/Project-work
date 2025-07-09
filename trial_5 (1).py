@@ -355,10 +355,10 @@ def dashboard_tab():
     df["Message"] = df["message"]
     df["Select"] = False
 
-    project_options_raw = df["Project"].dropna().str.title().unique().tolist()
+    project_options_raw = df["Project"].dropna().str.upper().unique().tolist()
     selected_projects = st.multiselect("Filter by project:", options=sorted(project_options_raw), key="dashboard_project_filter")
     if selected_projects:
-        df = df[df["Project"].str.title().isin(selected_projects)]
+        df = df[df["Project"].str.upper().isin(selected_projects)]
 
     status_filter = st.selectbox("Filter by status:", options=["All", "Not Started", "In Progress", "Completed"])
     if status_filter != "All":
@@ -437,14 +437,14 @@ def progress_insights_tab():
     st.table(leaderboard_df)
 
     st.subheader("📊 Task Status Distribution")
-    project_options = sorted(set(task["project"].title() for task in user_tasks if task["project"]))
+    project_options = sorted(set(task["project"].upper() for task in user_tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options, key="progress_project_filter")
 
     period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"], key="progress_period_filter")
     filtered_tasks = user_tasks
 
     if selected_projects:
-        filtered_tasks = [task for task in filtered_tasks if task["project"].title() in selected_projects]
+        filtered_tasks = [task for task in filtered_tasks if task["project"].upper() in selected_projects]
 
     today = datetime.date.today()
     if period == "This Week":
@@ -540,14 +540,14 @@ def team_dashboard_tab():
     st.dataframe(summary_df.style.apply(highlight_progress, axis=1), use_container_width=True)
 
     st.subheader("📊 Task Status Distribution by Team Member")
-    project_options = sorted(set(task["project"].title() for task in tasks if task["project"]))
+    project_options = sorted(set(task["project"].upper() for task in tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options, key="team_project_filter")
 
     period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"], key="team_period_filter")
     filtered_tasks = [task for task in tasks if task["user"] in team_members]
 
     if selected_projects:
-        filtered_tasks = [task for task in filtered_tasks if task["project"].title() in selected_projects]
+        filtered_tasks = [task for task in filtered_tasks if task["project"].upper() in selected_projects]
 
     if period == "This Week":
         start = today - datetime.timedelta(days=today.weekday())
