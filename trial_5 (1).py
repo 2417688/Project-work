@@ -443,8 +443,7 @@ def progress_insights_tab():
     project_options = sorted(set(task["project"].title() for task in user_tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options, key="progress_project_filter")
 
-    period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"])
-    filtered_tasks = user_tasks
+    period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"], key="team_period_filter")
 
     if selected_projects:
         filtered_tasks = [task for task in filtered_tasks if task["project"].title() in selected_projects]
@@ -549,8 +548,8 @@ def team_dashboard_tab():
     project_options = sorted(set(task["project"].title() for task in tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options, key="team_project_filter")
 
-    period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"])
-    filtered_tasks = [task for task in tasks if task["user"] in team_members]
+    period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"], key="team_period_filter")
+
 
     if selected_projects:
         filtered_tasks = [task for task in filtered_tasks if task["project"].title() in selected_projects]
