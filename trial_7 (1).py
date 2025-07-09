@@ -470,7 +470,7 @@ def dashboard_tab():
 
     status_filter = st.selectbox("Filter by status:", options=["All", "Not Started", "In Progress", "Completed"])
     if status_filter != "All":
-        df = df[df["Status"].str.contains(status_filter, case=False), key="dashboard_status_filter"]
+        df = df[df["Status"].str.contains(status_filter, case=False)]
 
     select_all = st.checkbox("✅ Select All")
     if select_all:
