@@ -359,11 +359,10 @@ if not st.session_state.logged_in:
     st.stop()
 
 #-------TAB 1---------
-def urgency_calculator_tab():
-    st.header("📊 Urgency Calculator")
-
+def priority_calculator_tab():
+    st.header("🎯 Priority Calculator")
     st.markdown(f"### 👋 Hello, {st.session_state.username.capitalize()}!")
-    st.markdown("Paste your message below and we'll analyze it for urgency.")
+    st.markdown("Paste your message below and we'll analyze its level of priority.")
 
     full_message_input = st.text_area("Paste the full message here including any deadlines:")
     message_date_input = st.date_input("Date the message was sent", datetime.date.today(), format="DD/MM/YYYY")
@@ -373,16 +372,17 @@ def urgency_calculator_tab():
     if analyze_button and full_message_input:
         message_date = datetime.datetime.combine(message_date_input, datetime.datetime.min.time())
         result = analyze_message(full_message_input, message_date)
+
         result["project"] = project_name_input.strip() if project_name_input else ""
         result["user"] = st.session_state.username
 
         st.markdown(f"**Response:** {result['response']}")
 
-        if result["escalate"]:
-            tasks = load_tasks()
-            tasks.append(result)
-            save_tasks(tasks)
-            st.success("✅ Task added to dashboard.")
+        # ✅ Save all messages regardless of priority
+        tasks = load_tasks()
+        tasks.append(result)
+        save_tasks(tasks)
+        st.success("✅ Task added to dashboard.")
 
 #-------TAB 2---------
 def overview_tab():
