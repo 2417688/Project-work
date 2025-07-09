@@ -438,7 +438,8 @@ def progress_insights_tab():
     # Doughnut chart filters
     st.subheader("📊 Task Status Distribution")
     project_options = sorted(set(task["project"].title() for task in user_tasks if task["project"]))
-    selected_projects = st.multiselect("Filter by project:", options=project_options)
+    selected_projects = st.multiselect("Filter by project:", options=project_options, key="progress_project_filter")
+
 
     period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"])
     filtered_tasks = user_tasks
@@ -544,7 +545,7 @@ def team_dashboard_tab():
     # Task status distribution chart
     st.subheader("📊 Task Status Distribution by Team Member")
     project_options = sorted(set(task["project"].title() for task in tasks if task["project"]))
-    selected_projects = st.multiselect("Filter by project:", options=project_options)
+    selected_projects = st.multiselect("Filter by project:", options=project_options, key="progress_project_filter")
 
     period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"])
     filtered_tasks = [task for task in tasks if task["user"] in team_members]
