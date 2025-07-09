@@ -554,12 +554,12 @@ def progress_insights_tab():
     df["deadline"] = pd.to_datetime(df["deadline"], errors="coerce")
 
     project_options = sorted(df["project"].dropna().unique().tolist())
-    selected_project = st.selectbox("Filter by project:", options=["All"] + project_options)
-
-    if selected_project != "All":
-        df = df[df["project"] == selected_project]
 
     if view_option == "High Priority Status Distribution":
+        selected_project = st.selectbox("Filter by project:", options=["All"] + project_options, key="high_priority_project_filter")
+        if selected_project != "All":
+            df = df[df["project"] == selected_project]
+
         high_df = df[df["priority_level"] == "🚨 High"]
         if high_df.empty:
             st.warning("No high priority tasks to display.")
@@ -584,7 +584,11 @@ def progress_insights_tab():
         st.plotly_chart(fig, use_container_width=True)
 
     elif view_option == "Priority Level Distribution":
-        period_filter = st.selectbox("Select Period:", ["All", "Next 7 Days", "Next 14 Days", "Next 30 Days"])
+        selected_project = st.selectbox("Filter by project:", options=["All"] + project_options, key="priority_level_project_filter")
+        if selected_project != "All":
+            df = df[df["project"] == selected_project]
+
+        period_filter = st.selectbox("Select Period:", ["All", "Next 7 Days", "Next 14 Days", "Next 30 Days"], key="priority_period_filter")
         today = datetime.date.today()
 
         if period_filter != "All":
