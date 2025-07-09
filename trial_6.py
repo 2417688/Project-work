@@ -318,8 +318,12 @@ def analyze_message(message, message_date):
         "importance": final_importance,
         "priority_level": priority_level,
         "escalate": escalate,
-        "response": response
+        "response": response,
+        "tone": "",
+        "sentiment": "",
+        "select": False
     }
+
 
 # USER DATABASE
 USERS = {
