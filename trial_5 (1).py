@@ -20,6 +20,8 @@ import uuid
 from dateparser.search import search_dates
 from pathlib import Path
 import json
+import plotly.express as px
+
 
 def load_tasks():
     try:
