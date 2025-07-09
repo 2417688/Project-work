@@ -421,11 +421,9 @@ def progress_insights_tab():
         st.info("No tasks available.")
         return
 
-    # Completed task counter (user-specific)
     completed_count = sum(1 for task in user_tasks if task["status"].lower() == "completed")
     st.metric("✅ Completed Tasks", completed_count)
 
-    # Leaderboard (optional: still shows all users)
     leaderboard_data = {}
     for task in tasks:
         user = task.get("user", "Unknown")
@@ -438,12 +436,12 @@ def progress_insights_tab():
     st.subheader("🏆 Leaderboard")
     st.table(leaderboard_df)
 
-    # Doughnut chart filters
     st.subheader("📊 Task Status Distribution")
     project_options = sorted(set(task["project"].title() for task in user_tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options, key="progress_project_filter")
 
-    period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"], key="team_period_filter")
+    period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"], key="progress_period_filter")
+    filtered_tasks = user_tasks
 
     if selected_projects:
         filtered_tasks = [task for task in filtered_tasks if task["project"].title() in selected_projects]
@@ -470,9 +468,9 @@ def progress_insights_tab():
             hole=0.4,
             color="Status",
             color_discrete_map={
-                "Not Started": "#f8d7da",   # pale red
-                "In Progress": "#fff3cd",  # pale yellow
-                "Completed": "#d4edda"     # pale green
+                "Not Started": "#f8d7da",
+                "In Progress": "#fff3cd",
+                "Completed": "#d4edda"
             }
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -488,7 +486,6 @@ def team_dashboard_tab():
         st.info("No tasks available.")
         return
 
-    # Exclude manager from team dashboard
     team_members = sorted(set(task["user"] for task in tasks if USERS.get(task["user"], {}).get("role") == "team_member"))
     summary = []
     today = datetime.date.today()
@@ -530,12 +527,11 @@ def team_dashboard_tab():
     summary_df.reset_index(drop=True, inplace=True)
     summary_df.index = summary_df.index + 1
 
-    # Apply row color styling
     def highlight_progress(row):
         color_map = {
-            "Falling Behind": "background-color: #f8d7da",  # pale red
-            "On Track": "background-color: #d1ecf1",        # pale blue
-            "Efficient": "background-color: #d4edda",       # pale green
+            "Falling Behind": "background-color: #f8d7da",
+            "On Track": "background-color: #d1ecf1",
+            "Efficient": "background-color: #d4edda",
             "No Tasks This Week": "background-color: #fefefe"
         }
         return [color_map.get(row["Progress"], "")] * len(row)
@@ -543,13 +539,12 @@ def team_dashboard_tab():
     st.subheader("📋 Team Progress Overview")
     st.dataframe(summary_df.style.apply(highlight_progress, axis=1), use_container_width=True)
 
-    # Task status distribution chart
     st.subheader("📊 Task Status Distribution by Team Member")
     project_options = sorted(set(task["project"].title() for task in tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options, key="team_project_filter")
 
     period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"], key="team_period_filter")
-
+    filtered_tasks = [task for task in tasks if task["user"] in team_members]
 
     if selected_projects:
         filtered_tasks = [task for task in filtered_tasks if task["project"].title() in selected_projects]
@@ -575,9 +570,9 @@ def team_dashboard_tab():
             title="Task Status by Team Member",
             labels={"user": "Team Member", "status": "Task Status"},
             color_discrete_map={
-                "Not Started": "#f8d7da",   # pale red
-                "In Progress": "#fff3cd",  # pale yellow
-                "Completed": "#d4edda"     # pale green
+                "Not Started": "#f8d7da",
+                "In Progress": "#fff3cd",
+                "Completed": "#d4edda"
             }
         )
         st.plotly_chart(fig, use_container_width=True)
