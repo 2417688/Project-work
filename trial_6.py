@@ -386,7 +386,6 @@ def priority_calculator_tab():
         st.success("✅ Task added to dashboard.")
 
 #-------TAB 2---------
-#-------TAB 2---------
 def overview_tab():
     st.header("📋 Task Overview")
     tasks = update_task_scores(load_tasks())
@@ -400,7 +399,7 @@ def overview_tab():
         if col not in df.columns:
             df[col] = "" if col in ["tone", "sentiment"] else False
 
-    df["Date Sent"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
+    df["Date Sent"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%Y-%m-%d")
     df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%Y-%m-%d")
 
     df_display = df[[
@@ -435,6 +434,7 @@ def overview_tab():
     )
 
     for i, row in edited_df.iterrows():
+        tasks[i]["date_sent"] = row["Date Sent"]
         tasks[i]["message"] = row["Message"]
         tasks[i]["project"] = row["Project"]
         tasks[i]["urgency"] = row["Urgency"]
