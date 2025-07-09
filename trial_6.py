@@ -224,8 +224,8 @@ def extract_deadline_from_message(message, reference_date):
 #LLM ADDITION
 # Simulated fine-tuned BERT model output
 def simulate_llm_scores(message):
-    urgency_score = random.uniform(0.3, 1.0)
-    importance_score = random.uniform(0.3, 1.0)
+    urgency_score = random.uniform(0.6, 1.0)
+    importance_score = random.uniform(0.6, 1.0)
     return urgency_score, importance_score
 
 # RULE-BASED URGENCY SCORE - DEADLINE PROXIMITY
@@ -282,7 +282,6 @@ def generate_response(urgency, importance, escalate):
 # ANALYSIS AND ESCALATION LOGIC
 def analyze_message(message, message_date):
     deadline = extract_deadline_from_message(message, message_date)
-
     urgency_rule_score = rule_based_urgency(message_date, deadline)
     urgency_flag_score = rule_based_flags(message)
     urgency_llm_score, importance_llm_score = simulate_llm_scores(message)
@@ -294,7 +293,6 @@ def analyze_message(message, message_date):
         importance_llm_score
     )
 
-    # Priority level assignment
     if final_urgency >= 0.8 and final_importance >= 0.8:
         priority_level = "🚨 High"
     elif final_urgency >= 0.5 and final_importance >= 0.5:
@@ -316,6 +314,8 @@ def analyze_message(message, message_date):
         "status": "Not Started",
         "urgency": final_urgency,
         "importance": final_importance,
+        "llm_urgency": urgency_llm_score,
+        "llm_importance": importance_llm_score,
         "priority_level": priority_level,
         "escalate": escalate,
         "response": response,
@@ -323,6 +323,7 @@ def analyze_message(message, message_date):
         "sentiment": "",
         "select": False
     }
+
 
 
 # USER DATABASE
@@ -385,9 +386,9 @@ def priority_calculator_tab():
         st.success("✅ Task added to dashboard.")
 
 #-------TAB 2---------
+#-------TAB 2---------
 def overview_tab():
     st.header("📋 Task Overview")
-
     tasks = update_task_scores(load_tasks())
     df = pd.DataFrame(tasks)
     if df.empty:
@@ -402,16 +403,15 @@ def overview_tab():
     df["Date Sent"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
     df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%Y-%m-%d")
 
-    editable_cols = ["project", "priority_level", "select"]
     df_display = df[[
         "Date Sent", "message", "project", "urgency", "importance",
-        "tone", "sentiment", "priority_level", "Deadline", "select"
+        "tone", "sentiment", "priority_level", "Deadline", "status", "select"
     ]].copy()
 
     df_display.rename(columns={
         "message": "Message", "project": "Project", "urgency": "Urgency", "importance": "Importance",
         "tone": "Tone", "sentiment": "Sentiment", "priority_level": "Priority Level",
-        "Deadline": "Deadline", "select": "Select"
+        "Deadline": "Deadline", "status": "Status", "select": "Select"
     }, inplace=True)
 
     edited_df = st.data_editor(
@@ -419,18 +419,31 @@ def overview_tab():
         use_container_width=True,
         column_config={
             "Message": st.column_config.TextColumn("Message", width="small"),
+            "Project": st.column_config.TextColumn("Project"),
+            "Urgency": st.column_config.NumberColumn("Urgency", min_value=0.0, max_value=1.0, step=0.1),
+            "Importance": st.column_config.NumberColumn("Importance", min_value=0.0, max_value=1.0, step=0.1),
+            "Tone": st.column_config.TextColumn("Tone"),
+            "Sentiment": st.column_config.TextColumn("Sentiment"),
             "Priority Level": st.column_config.SelectboxColumn("Priority Level", options=["🚨 High", "⚠️ Moderate", "🟢 Low"]),
+            "Deadline": st.column_config.TextColumn("Deadline"),
+            "Status": st.column_config.SelectboxColumn("Status", options=["🔴 Not Started", "🟡 In Progress", "🟢 Completed"]),
             "Select": st.column_config.CheckboxColumn("Select")
         },
-        disabled=[col for col in df_display.columns if col not in editable_cols],
+        disabled=[],  # ✅ All columns are editable
         hide_index=True,
         key="overview_editor"
     )
 
     for i, row in edited_df.iterrows():
+        tasks[i]["message"] = row["Message"]
         tasks[i]["project"] = row["Project"]
+        tasks[i]["urgency"] = row["Urgency"]
+        tasks[i]["importance"] = row["Importance"]
+        tasks[i]["tone"] = row["Tone"]
+        tasks[i]["sentiment"] = row["Sentiment"]
         tasks[i]["priority_level"] = row["Priority Level"]
         tasks[i]["deadline"] = row["Deadline"]
+        tasks[i]["status"] = row["Status"]
         tasks[i]["select"] = row["Select"]
 
     if st.button("Delete Selected Tasks"):
