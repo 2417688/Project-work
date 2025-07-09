@@ -430,7 +430,7 @@ def overview_tab():
                 except:
                     task["deadline"] = row["Deadline"]
 
-    if st.button("🗑️ Delete Selected"):
+    if st.button("🗑️ Delete Selected", key="overview_delete_button"):
         selected_ids = [id_map[i] for i in range(len(edited_df)) if edited_df.iloc[i]["Select"] and i < len(id_map)]
         tasks = [task for task in tasks if task["id"] not in selected_ids]
         save_tasks(tasks)
@@ -509,7 +509,7 @@ def dashboard_tab():
                 except:
                     task["deadline"] = row["Deadline"]
 
-    if st.button("🗑️ Delete Selected"):
+    if st.button("🗑️ Delete Selected", key="dasboard_delete_button"):
         selected_ids = [id_map[i] for i in range(len(edited_df)) if edited_df.iloc[i]["Select"] and i < len(id_map)]
         tasks = [task for task in tasks if task["id"] not in selected_ids]
         save_tasks(tasks)
