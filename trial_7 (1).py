@@ -472,7 +472,7 @@ def dashboard_tab():
     if status_filter != "All":
         df = df[df["Status"].str.contains(status_filter, case=False)]
 
-    select_all = st.checkbox("✅ Select All", key="overview_select")
+    select_all = st.checkbox("✅ Select All", key="dashboard_select")
     if select_all:
         df["Select"] = True
 
