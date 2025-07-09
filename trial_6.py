@@ -394,11 +394,21 @@ def overview_tab():
     df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%Y-%m-%d")
 
     editable_cols = ["project", "priority_level", "Deadline", "select"]
-    df_display = df[["Date Sent", "message", "project", "urgency", "importance", "tone", "sentiment", "priority_level", "Deadline", "select"]].copy()
+    df_display = df[[
+        "Date Sent", "message", "project", "urgency", "importance",
+        "tone", "sentiment", "priority_level", "Deadline", "select"
+    ]].copy()
+
     df_display.rename(columns={
-        "message": "Message", "project": "Project", "urgency": "Urgency", "importance": "Importance",
-        "tone": "Tone", "sentiment": "Sentiment", "priority_level": "Priority Level",
-        "Deadline": "Deadline", "select": "Select"
+        "message": "Message",
+        "project": "Project",
+        "urgency": "Urgency",
+        "importance": "Importance",
+        "tone": "Tone",
+        "sentiment": "Sentiment",
+        "priority_level": "Priority Level",
+        "Deadline": "Deadline",
+        "select": "Select"
     }, inplace=True)
 
     edited_df = st.data_editor(
@@ -442,11 +452,16 @@ def dashboard_tab():
     df["Date Sent"] = pd.to_datetime(df["date_sent"], errors="coerce").dt.strftime("%d/%m/%Y")
     df["Deadline"] = pd.to_datetime(df["deadline"], errors="coerce").dt.strftime("%Y-%m-%d")
 
-    df_display = df[["Date Sent", "message", "project", "urgency", "importance", "tone", "sentiment", "priority_level", "Deadline"]].copy()
+    df_display = df[[
+        "Date Sent", "message", "project", "priority_level", "Deadline", "select"
+    ]].copy()
+
     df_display.rename(columns={
-        "message": "Message", "project": "Project", "urgency": "Urgency", "importance": "Importance",
-        "tone": "Tone", "sentiment": "Sentiment", "priority_level": "Priority Level",
-        "Deadline": "Deadline"
+        "message": "Message",
+        "project": "Project",
+        "priority_level": "Priority Level",
+        "Deadline": "Deadline",
+        "select": "Select"
     }, inplace=True)
 
     st.dataframe(
