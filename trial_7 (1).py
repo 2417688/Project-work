@@ -395,7 +395,7 @@ def overview_tab():
         df = df[df["Priority"] == priority_filter]
 
     # Select all
-    select_all = st.checkbox("✅ Select All")
+    select_all = st.checkbox("✅ Select All", key="overview_select")
     if select_all:
         df["Select"] = True
 
@@ -472,7 +472,7 @@ def dashboard_tab():
     if status_filter != "All":
         df = df[df["Status"].str.contains(status_filter, case=False)]
 
-    select_all = st.checkbox("✅ Select All")
+    select_all = st.checkbox("✅ Select All", key="overview_select")
     if select_all:
         df["Select"] = True
 
