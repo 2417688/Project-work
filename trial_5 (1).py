@@ -511,10 +511,10 @@ def team_dashboard_tab():
             progress = "On Track"
 
         recommendation = {
-            "Falling Behind": "Offer support.",
-            "On Track": "Monitor progress.",
-            "Efficient": "Note good performance.",
-            "No Tasks This Week": "Check in for updates."
+            "Falling Behind": "Offer support",
+            "On Track": "Monitor progress",
+            "Efficient": "Note good performance",
+            "No Tasks This Week": "Check in for updates"
         }.get(progress, "")
 
         summary.append({
