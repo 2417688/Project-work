@@ -352,13 +352,13 @@ def urgency_calculator_tab():
 
         st.success("✅ Task added to your records.")
 
-        st.markdown("### 🛡️ Transparency Statement")
-        st.info(
-            "The Cognizant Message Analyzer reviews internal messages to detect urgency, tone, and sentiment, "
-            "helping teams communicate more clearly and effectively. It uses anonymized data and AI models that are "
-            "continuously retrained to reduce bias. Users can opt out of data storage, and human oversight ensures that "
-            "recommendations support, not replace, professional judgment."
-        )
+    st.markdown("### 🛡️ Transparency Statement")
+    st.info(
+    "The Cognizant Message Analyzer reviews internal messages to detect urgency, tone, and sentiment, "
+    "helping teams communicate more clearly and effectively. It uses anonymized data and AI models that are "
+    "continuously retrained to reduce bias. Users can opt out of data storage, and human oversight ensures that "
+    "recommendations support, not replace, professional judgment."
+    )      
 
 
 #------TAB 2-------
