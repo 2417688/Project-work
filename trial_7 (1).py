@@ -626,7 +626,7 @@ def progress_insights_tab():
         )
         st.plotly_chart(fig, use_container_width=True)
 
-#-------TAB 5---------
+#-------TAB 5--------- 
 def team_dashboard_tab():
     st.header("👥 Team Dashboard")
 
