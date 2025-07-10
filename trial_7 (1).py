@@ -706,7 +706,6 @@ def team_dashboard_tab():
     selected_projects = st.multiselect("Filter by project:", options=project_options, key="team_project_filter")
 
     period_filter = st.selectbox("Select Period:", ["All", "Next 7 Days", "Next 14 Days", "Next 30 Days"], key="team_period_filter")
-today = datetime.date.today()
 
 if period_filter != "All":
     days = int(period_filter.split()[1])
