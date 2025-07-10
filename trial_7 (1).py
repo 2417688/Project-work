@@ -705,21 +705,15 @@ def team_dashboard_tab():
     project_options = sorted(set(task["project"].upper() for task in tasks if task["project"]))
     selected_projects = st.multiselect("Filter by project:", options=project_options, key="team_project_filter")
 
-    period = st.selectbox("Filter by time period:", ["All", "This Week", "Last 2 Weeks", "This Month"], key="team_period_filter")
-    filtered_tasks = [task for task in tasks if task["user"] in team_members]
+    period_filter = st.selectbox("Select Period:", ["All", "Next 7 Days", "Next 14 Days", "Next 30 Days"], key="team_period_filter")
+today = datetime.date.today()
 
-    if selected_projects:
-        filtered_tasks = [task for task in filtered_tasks if task["project"].upper() in selected_projects]
-
-    if period == "This Week":
-        start = today - datetime.timedelta(days=today.weekday())
-        filtered_tasks = [task for task in filtered_tasks if "date_sent" in task and datetime.datetime.strptime(task["date_sent"], "%Y-%m-%d").date() >= start]
-    elif period == "Last 2 Weeks":
-        start = today - datetime.timedelta(days=14)
-        filtered_tasks = [task for task in filtered_tasks if "date_sent" in task and datetime.datetime.strptime(task["date_sent"], "%Y-%m-%d").date() >= start]
-    elif period == "This Month":
-        start = today.replace(day=1)
-        filtered_tasks = [task for task in filtered_tasks if "date_sent" in task and datetime.datetime.strptime(task["date_sent"], "%Y-%m-%d").date() >= start]
+if period_filter != "All":
+    days = int(period_filter.split()[1])
+    filtered_tasks = [task for task in filtered_tasks if task.get("deadline")]
+    for task in filtered_tasks:
+        task["deadline"] = pd.to_datetime(task["deadline"], errors="coerce")
+    filtered_tasks = [task for task in filtered_tasks if task["deadline"] and task["deadline"].date() <= today + datetime.timedelta(days=days)]
 
     if filtered_tasks:
         df = pd.DataFrame(filtered_tasks)
