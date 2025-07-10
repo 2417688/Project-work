@@ -719,9 +719,9 @@ def team_dashboard_tab():
             title="Task Status by Team Member",
             labels={"user": "Team Member", "status": "Task Status"},
             color_discrete_map={
-                "Not Started": "#dc3545",   # red
-                "In Progress": "#ffc107",   # yellow
-                "Completed": "#28a745"      # green
+                "Not Started": "#dc3545",
+                "In Progress": "#ffc107",
+                "Completed": "#28a745"
             }
 
         )
