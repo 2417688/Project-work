@@ -325,7 +325,7 @@ if not st.session_state.logged_in:
 def urgency_calculator_tab():
     st.header("🎯 Priority Calculator")
     st.markdown(f"### 👋 Hello, {st.session_state.username.capitalize()}!")
-    st.markdown("Paste your message below and we'll analyze it for urgency and importance.")
+    st.markdown("Paste your message below to determine its level of priority")
 
     full_message_input = st.text_area("Paste the full message here including any deadlines:")
     message_date_input = st.date_input("Date the message was sent", datetime.date.today(), format="DD/MM/YYYY")
@@ -429,6 +429,7 @@ def overview_tab():
                     task["deadline"] = datetime.datetime.strptime(row["Deadline"], "%d/%m/%Y").strftime("%Y-%m-%d")
                 except:
                     task["deadline"] = row["Deadline"]
+                    save_tasks(tasks)
 
     if st.button("🗑️ Delete Selected", key="overview_delete_button"):
         selected_ids = [id_map[i] for i in range(len(edited_df)) if edited_df.iloc[i]["Select"] and i < len(id_map)]
@@ -456,7 +457,7 @@ def dashboard_tab():
     df["Project"] = df["project"]
     df["Action"] = df["action"]
     df["Message"] = df["message"]
-    df["Status"] = df["status"]
+    df["Status"] = df.get("status", "Not Started")
     df["Select"] = False
 
     project_options_raw = df["Project"].dropna().str.upper().unique().tolist()
@@ -508,6 +509,7 @@ def dashboard_tab():
                     task["deadline"] = datetime.datetime.strptime(row["Deadline"], "%d/%m/%Y").strftime("%Y-%m-%d")
                 except:
                     task["deadline"] = row["Deadline"]
+                    save_tasks(tasks)
 
     if st.button("🗑️ Delete Selected", key="dasboard_delete_button"):
         selected_ids = [id_map[i] for i in range(len(edited_df)) if edited_df.iloc[i]["Select"] and i < len(id_map)]
@@ -615,10 +617,12 @@ def progress_insights_tab():
             title="Task Priority Level Distribution",
             color="Priority",
             color_discrete_map={
-                "High": "#f8d7da",
-                "Moderate": "#fff3cd",
-                "Low": "#d4edda"
-            }
+            "High": "#dc3545",
+            "Moderate": "#ffc107",
+            "Low": "#28a745"
+        }
+
+
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -715,10 +719,11 @@ def team_dashboard_tab():
             title="Task Status by Team Member",
             labels={"user": "Team Member", "status": "Task Status"},
             color_discrete_map={
-                "Not Started": "#f8d7da",
-                "In Progress": "#fff3cd",
-                "Completed": "#d4edda"
+                "Not Started": "#dc3545",   # red
+                "In Progress": "#ffc107",   # yellow
+                "Completed": "#28a745"      # green
             }
+
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
