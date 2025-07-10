@@ -457,7 +457,7 @@ def dashboard_tab():
     df["Project"] = df["project"]
     df["Action"] = df["action"]
     df["Message"] = df["message"]
-    df["Status"] = df["status"].fillna("Not Started")
+    df["Status"] = df["status"].replace("", "Not Started").fillna("Not Started")
     df["Select"] = False
 
     project_options_raw = df["Project"].dropna().str.upper().unique().tolist()
@@ -509,7 +509,7 @@ def dashboard_tab():
                     task["deadline"] = datetime.datetime.strptime(row["Deadline"], "%d/%m/%Y").strftime("%Y-%m-%d")
                 except:
                     task["deadline"] = row["Deadline"]
-                save_tasks(tasks)
+            save_tasks(tasks)
 
     if st.button("🗑️ Delete Selected", key="dasboard_delete_button"):
         selected_ids = [id_map[i] for i in range(len(edited_df)) if edited_df.iloc[i]["Select"] and i < len(id_map)]
