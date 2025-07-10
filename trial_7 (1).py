@@ -631,6 +631,10 @@ def team_dashboard_tab():
     st.header("👥 Team Dashboard")
 
     tasks = load_tasks()
+    for task in tasks:
+    if task.get("status", "").strip().lower() == "started":
+        task["status"] = "In Progress"
+
     if not tasks:
         st.info("No tasks available.")
         return
@@ -720,7 +724,7 @@ def team_dashboard_tab():
             labels={"user": "Team Member", "status": "Task Status"},
             color_discrete_map={
                 "Not Started": "#dc3545",
-                "In Progress": "#ffc107",
+                "In Progress": "#fff3cd",
                 "Completed": "#28a745"
             }
 
