@@ -631,9 +631,11 @@ def team_dashboard_tab():
     st.header("👥 Team Dashboard")
 
     tasks = load_tasks()
+    
+    # Normalize any incorrect status values
     for task in tasks:
-    if task.get("status", "").strip().lower() == "started":
-        task["status"] = "In Progress"
+        if task.get("status", "").strip().lower() == "started":
+            task["status"] = "In Progress"
 
     if not tasks:
         st.info("No tasks available.")
