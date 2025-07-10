@@ -429,7 +429,7 @@ def overview_tab():
                     task["deadline"] = datetime.datetime.strptime(row["Deadline"], "%d/%m/%Y").strftime("%Y-%m-%d")
                 except:
                     task["deadline"] = row["Deadline"]
-                save_tasks(tasks)
+            save_tasks(tasks)
 
     if st.button("🗑️ Delete Selected", key="overview_delete_button"):
         selected_ids = [id_map[i] for i in range(len(edited_df)) if edited_df.iloc[i]["Select"] and i < len(id_map)]
@@ -618,7 +618,7 @@ def progress_insights_tab():
             color="Priority",
             color_discrete_map={
             "High": "#FF7272",
-            "Moderate": "#ffc107",
+            "Moderate": "#F7E498",
             "Low": "#98F798"
         }
 
