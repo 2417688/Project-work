@@ -701,46 +701,46 @@ def team_dashboard_tab():
     st.subheader("📋 Team Progress Overview")
     st.dataframe(summary_df.style.apply(highlight_progress, axis=1), use_container_width=True)
 
-st.subheader("📊 Task Status Distribution by Team Member")
-
-project_options = sorted(set(task["project"].upper() for task in tasks if task["project"]))
-selected_projects = st.multiselect("Filter by project:", options=project_options, key="team_project_filter")
-
-period_filter = st.selectbox("Select Period:", ["All", "Next 7 Days", "Next 14 Days", "Next 30 Days"], key="team_period_filter")
-
-filtered_tasks = [task for task in tasks if task["user"] in team_members]
-
-if selected_projects:
-    filtered_tasks = [task for task in filtered_tasks if task["project"].upper() in selected_projects]
-
-today = datetime.date.today()
-if period_filter != "All":
-    days = int(period_filter.split()[1])
-    filtered_tasks = [task for task in filtered_tasks if task.get("deadline")]
-    for task in filtered_tasks:
-        task["deadline"] = pd.to_datetime(task["deadline"], errors="coerce")
-    filtered_tasks = [task for task in filtered_tasks if task["deadline"] and task["deadline"].date() <= today + datetime.timedelta(days=days)]
-
-if filtered_tasks:
-    df = pd.DataFrame(filtered_tasks)
-    df["date_sent"] = pd.to_datetime(df["date_sent"], errors="coerce")
-    df["user"] = df["user"].str.capitalize()
-    fig = px.histogram(
-        df,
-        x="user",
-        color="status",
-        barmode="stack",
-        title="Task Status by Team Member",
-        labels={"user": "Team Member", "status": "Task Status"},
-        color_discrete_map={
-            "Not Started": "#FF7272",
-            "In Progress": "#F7E498",
-            "Completed": "#98F798"
-        }
-    )
-    st.plotly_chart(fig, use_container_width=True)
-else:
-    st.warning("No tasks match the selected filters for the chart.")
+    st.subheader("📊 Task Status Distribution by Team Member")
+    
+    project_options = sorted(set(task["project"].upper() for task in tasks if task["project"]))
+    selected_projects = st.multiselect("Filter by project:", options=project_options, key="team_project_filter")
+    
+    period_filter = st.selectbox("Select Period:", ["All", "Next 7 Days", "Next 14 Days", "Next 30 Days"], key="team_period_filter")
+    
+    filtered_tasks = [task for task in tasks if task["user"] in team_members]
+    
+    if selected_projects:
+        filtered_tasks = [task for task in filtered_tasks if task["project"].upper() in selected_projects]
+    
+    today = datetime.date.today()
+    if period_filter != "All":
+        days = int(period_filter.split()[1])
+        filtered_tasks = [task for task in filtered_tasks if task.get("deadline")]
+        for task in filtered_tasks:
+            task["deadline"] = pd.to_datetime(task["deadline"], errors="coerce")
+        filtered_tasks = [task for task in filtered_tasks if task["deadline"] and task["deadline"].date() <= today + datetime.timedelta(days=days)]
+    
+    if filtered_tasks:
+        df = pd.DataFrame(filtered_tasks)
+        df["date_sent"] = pd.to_datetime(df["date_sent"], errors="coerce")
+        df["user"] = df["user"].str.capitalize()
+        fig = px.histogram(
+            df,
+            x="user",
+            color="status",
+            barmode="stack",
+            title="Task Status by Team Member",
+            labels={"user": "Team Member", "status": "Task Status"},
+            color_discrete_map={
+                "Not Started": "#FF7272",
+                "In Progress": "#F7E498",
+                "Completed": "#98F798"
+            }
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("No tasks match the selected filters for the chart.")
 
 # UI
 # Add a banner and title
