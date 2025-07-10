@@ -582,9 +582,9 @@ def progress_insights_tab():
             title="High Priority Task Status Distribution",
             color="Status",
             color_discrete_map={
-                "Not Started": "#f8d7da",   # red
-                "In Progress": "#fff3cd",  # yellow
-                "Completed": "#d4edda"     # green
+                "Not Started": "#FF7272",
+                "In Progress": "#F7E498",
+                "Completed": "#98F798"
             }
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -617,9 +617,9 @@ def progress_insights_tab():
             title="Task Priority Level Distribution",
             color="Priority",
             color_discrete_map={
-            "High": "#dc3545",
+            "High": "#FF7272",
             "Moderate": "#ffc107",
-            "Low": "#28a745"
+            "Low": "#98F798"
         }
 
 
@@ -725,9 +725,9 @@ def team_dashboard_tab():
             title="Task Status by Team Member",
             labels={"user": "Team Member", "status": "Task Status"},
             color_discrete_map={
-                "Not Started": "#dc3545",
-                "In Progress": "#fff3cd",
-                "Completed": "#28a745"
+                "Not Started": "#FF7272",
+                "In Progress": "#F7E498",
+                "Completed": "#98F798"
             }
 
         )
