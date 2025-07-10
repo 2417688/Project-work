@@ -302,12 +302,15 @@ def login():
     username = st.text_input("Username").lower()
     password = st.text_input("Password", type="password")
 
+    opt_in = st.checkbox("By ticking this checkbox you are opting in for your data to be stored for AI model training")
+
     if st.button("Login"):
         user = USERS.get(username)
         if user and user["password"] == password:
             st.session_state.logged_in = True
             st.session_state.username = username
             st.session_state.role = user["role"]
+            st.session_state.opt_in = opt_in
             st.success(f"Welcome, {username.capitalize()}!")
             st.rerun()
         else:
@@ -348,6 +351,15 @@ def urgency_calculator_tab():
         save_tasks(tasks)
 
         st.success("✅ Task added to your records.")
+
+        st.markdown("### 🛡️ Transparency Statement")
+        st.info(
+            "The Cognizant Message Analyzer reviews internal messages to detect urgency, tone, and sentiment, "
+            "helping teams communicate more clearly and effectively. It uses anonymized data and AI models that are "
+            "continuously retrained to reduce bias. Users can opt out of data storage, and human oversight ensures that "
+            "recommendations support, not replace, professional judgment."
+        )
+
 
 #------TAB 2-------
 def overview_tab():
